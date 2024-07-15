@@ -33,16 +33,18 @@ const LINEFIELDS = {
 // }}}
 // Global Variables {{{
 let invoice = URLPARAMS.get('invoice');
+let grid;
+let data;
 // }}}
 
 
 // Initialization {{{
 function startup() {
-
     showPage("loading");
     getActivities()
-        .then(res => loadGridEditor());
-
+        .then(res => loadGridEditor())
+        .then(res => {if(invoice) {getInvoiceInfo();getLines()}})
+        .then(res => showPage("grid-editor"));
 }
 // }}}
 
@@ -109,11 +111,11 @@ function handleInvoices(res) {
 
         invoiceOpt.click(() => {
             invoice = res[i][3]["value"];
-            loadGridEditor();
+            showPage("loading")
+            getLines().then(res => showPage("grid-editor"));
         });
 
         invoicesLst.append(invoiceOpt)
-
     }
 }
 
@@ -132,57 +134,60 @@ function handleInvoiceInfo(res) {
 
 // Grid Editor {{{
 function loadGridEditor() {
-    if(invoice) {
-        getInvoiceInfo()
-        grid = new gridjs.Grid({ 
-            columns: [
-                {name:'Date', width:"100px"}, 
-                {name:'Activity', width:"200px"}, 
-                {name:'Description', width:"300px"},
-                {name:'Line #', width:"100px"},
-                {name:'Price', width:"100px"},
-                {name:'Vendor Price', width:"100px"},
-                {name:'QTY', width:"100px"},
-                {name:'Target Margin', width:"200px"}],
-            data: [],
-            resizable: true,
-            style: {
-                table: {
-                    'overflow-x': 'auto' // Make the table scrollable vertically
-                }
-            }
-        });
+    grid = new gridjs.Grid({ 
+        columns: [
+            {name:'Date', width: "200px"}, 
+            {name:'Activity', width:"200px"}, 
+            {name:'Description', width:"300px"},
+            {name:'Line #'},
+            {name:'Price', width:"100px"},
+            {name:'Vendor Price'},
+            {name:'QTY', width:"100px"},
+            {name:'Target Margin', width:"200px", footer: (column) => column.reduce((acc, curr) => acc + curr.value, 0)},
+        ],
+        data: [['1']],
+        resizable: true,
+        autoWidth: true,
+        fixedHeader: true,
+        style: {
+        },
+    });
+    document.getElementById("grid-edit-table").addEventListener("input", function() {
+        console.log("input event fired");
+    }, false);
 
-
-        grid.render(document.getElementById('grid-edit-table'));
-        getLines(grid);
-    }
-    showPage("grid-editor")
+    grid.render(document.getElementById('grid-edit-table'));
 }
-//}}}
-
-
-// Line handling {{{
 
 const names = ["Date", "Activity", "Description", "Line #","Price","Vendor Price", "QTY","Target Margin"]
 const fields = [11,7,21,24,20,31,12,32]
 
-function getLines(grid) {
+function getLines() {
     return queryQuickbase({
         "from": SCHEMA["Lines"]["id"],
         "select": fields,
         "where": `{15.EX.${invoice}}`
-    }).then(resj => {handleLines(grid, resj["data"])})
+    }).then(resj => {handleLines(resj["data"])})
 }
 
-function handleLines(grid,resj) {
+function handleLines(resj) {
     let list = [];
     for(let i = 0; i<resj.length; i++) {
-        list.push(fields.map((field) => resj[i][field]["value"]))
+        list.push(fields.map((field) => gridjs.html(`<div contenteditable>${resj[i][field]["value"]}</div>`)))
     }
+    data = list;
     grid.updateConfig({ data: list }).forceRender();
 }
 
+function updateSummary() {
+    console.log(fields.reduce((acc, elt) => acc + data[7][elt]))
+}
+
+
+//}}}
+
+
+// Line Editing {{{
 function addLine() {
     let record = {};
 

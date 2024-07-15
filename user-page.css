@@ -1,6 +1,6 @@
 :root {
-    --main-bg-color: #1d4193;
     --side-bg-color: #1d4193;
+    --main-bg-color: #00003f;
     --accent1: #3399ff;
     --accent2: white;
     --accent3: rgb(200, 50, 70);
@@ -12,6 +12,9 @@
 /* Generic Styling{{{*/
 *{
     box-sizing: border-box;
+}
+html, body {
+    height: 95%;
 }
 body {
     font-family: 'Montserrat', Tahoma, Geneva, Verdana, sans-serif;
@@ -58,26 +61,28 @@ input, textarea, select {
 
 /* Page Outline{{{*/
 #page-content {
-    margin: 3em;
+    margin: 1em;
     font-size: 20px;
     width: 100%;
     text-align: center;
-    padding-bottom: 80px;
+    height: 100%;
 }
 .page {
     display: none;
     text-align: center;
+    height: 100%;
 }
 
 #header {
-    width: 100%;
+    width: 50%;
     border-radius: 10px;
-    margin-bottom: 20px;
     padding: 10px;
     cursor: pointer;
     background-color: var(--accent3);
     border: 2px solid black;
     text-align: center;
+    position: relative;
+    top: 0px;
 }
 /*}}}*/
 
@@ -111,8 +116,14 @@ input, textarea, select {
 }/*}}}*/
 
 /* Grid Edit{{{*/
+#actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
 #grid-editor {
-    padding: 3%;
+    padding: 2%;
     background-color: var(--side-bg-color);
     margin-bottom: 20px;
     border-radius: 10px;
@@ -122,25 +133,37 @@ input, textarea, select {
 #grid-edit-table {
     width: 100%; /* Set the width of the table container */
     overflow-x: auto; /* Enable horizontal scrolling */
+    overflow-y: auto;
+    height: 75%;
+}
+
+.gridjs table {
+    max-height: 500px;
+    overflow-y: scroll;
 }
 
 .gridjs tr {
-    color: black;
-    border: 1px solid black;
     background-color: var(--accent2);
     margin: 10px;
     padding: 10px;
     text-align: center;
+    max-height: 10px;
+    border-radius: 10px;
 }
 .gridjs th {
     color: var(--accent2);
-    border: 1px solid black;
     background-color: var(--accent3);
     margin: 10px;
     padding: 10px;
     text-align: center;
 }
+.gridjs td {
+    font-size: 20px;
+    height: 30px;
+    overflow: hidden;
+}
 /*}}}*/
+
 
 /* Auxilliary Pages {{{*/
 #success {
