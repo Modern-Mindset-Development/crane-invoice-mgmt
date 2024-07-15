@@ -149,12 +149,16 @@ function loadGridEditor() {
         resizable: true,
         autoWidth: true,
         fixedHeader: true,
-        style: {
-        },
+        className: {
+            td: 'edit-cell'
+        }
     });
-    document.getElementById("grid-edit-table").addEventListener("input", function() {
-        updateSummary($(this)[0].id);
-    }, false);
+
+
+    document.getElementById("grid-edit-table").addEventListener('input', function(event) {
+        let cell = event.target
+        updateSummary(cell);
+    });
 
     grid.render(document.getElementById('grid-edit-table'));
 }
@@ -180,9 +184,15 @@ function handleLines(resj) {
     grid.updateConfig({ data: list }).forceRender();
 }
 
-function updateSummary(k) {
-    console.log(k)
-    console.log(data.reduce((acc, elt) => acc + elt[4], 0))
+function updateSummary(cell) {
+    const rowIndex = cell.id.split("-")[0]; // Adjust for header row
+    const field = cell.id.split("-")[1];
+    
+    if(field == 20) {
+        data[rowIndex][4] = parseFloat(cell.textContent.trim())
+        console.log(data.reduce((acc, elt) => acc + elt[4], 0))
+    }
+
 }
 
 
