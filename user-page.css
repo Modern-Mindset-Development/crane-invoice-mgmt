@@ -84,6 +84,17 @@ input, textarea, select {
     position: relative;
     top: 0px;
 }
+#refresh {
+    display: flex;
+    cursor: pointer;
+    width: 50%;
+    border-radius: 10px;
+    background-color: var(--accent3);
+    border: 2px solid black;
+    padding: 10px;
+    justify-content: center;
+    align-items: center;
+}
 /*}}}*/
 
 /* Search Menu {{{*/
@@ -124,7 +135,7 @@ input, textarea, select {
 
 #grid-editor {
     padding: 2%;
-    background-color: var(--side-bg-color);
+    background-color: var(--main-bg-color);
     margin-bottom: 20px;
     border-radius: 10px;
     text-align: left;

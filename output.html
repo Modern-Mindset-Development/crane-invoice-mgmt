@@ -8,8 +8,8 @@
 <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
 
 <style>:root {
-    --main-bg-color: #1d4193;
-    --side-bg-color: #000066;
+    --side-bg-color: #1d4193;
+    --main-bg-color: #00003f;
     --accent1: #3399ff;
     --accent2: white;
     --accent3: rgb(200, 50, 70);
@@ -21,6 +21,9 @@
 /* Generic Styling{{{*/
 *{
     box-sizing: border-box;
+}
+html, body {
+    height: 95%;
 }
 body {
     font-family: 'Montserrat', Tahoma, Geneva, Verdana, sans-serif;
@@ -67,26 +70,39 @@ input, textarea, select {
 
 /* Page Outline{{{*/
 #page-content {
-    margin: 3em;
+    margin: 1em;
     font-size: 20px;
     width: 100%;
     text-align: center;
-    padding-bottom: 80px;
+    height: 100%;
 }
 .page {
     display: none;
     text-align: center;
+    height: 100%;
 }
 
 #header {
-    width: 100%;
+    width: 50%;
     border-radius: 10px;
-    margin-bottom: 20px;
     padding: 10px;
     cursor: pointer;
     background-color: var(--accent3);
     border: 2px solid black;
     text-align: center;
+    position: relative;
+    top: 0px;
+}
+#refresh {
+    display: flex;
+    cursor: pointer;
+    width: 50%;
+    border-radius: 10px;
+    background-color: var(--accent3);
+    border: 2px solid black;
+    padding: 10px;
+    justify-content: center;
+    align-items: center;
 }
 /*}}}*/
 
@@ -113,16 +129,22 @@ input, textarea, select {
     background-color: var(--accent3);
     padding: 12px;
     font-size: 18px;
-    color: black;
+    color: var(--accent2);
     display: block;
     border-radius: 5px;
     cursor: pointer;
 }/*}}}*/
 
 /* Grid Edit{{{*/
+#actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
 #grid-editor {
-    padding: 3%;
-    background-color: var(--side-bg-color);
+    padding: 2%;
+    background-color: var(--main-bg-color);
     margin-bottom: 20px;
     border-radius: 10px;
     text-align: left;
@@ -131,25 +153,37 @@ input, textarea, select {
 #grid-edit-table {
     width: 100%; /* Set the width of the table container */
     overflow-x: auto; /* Enable horizontal scrolling */
+    overflow-y: auto;
+    height: 75%;
+}
+
+.gridjs table {
+    max-height: 500px;
+    overflow-y: scroll;
 }
 
 .gridjs tr {
-    color: black;
-    border: 1px solid black;
     background-color: var(--accent2);
     margin: 10px;
     padding: 10px;
     text-align: center;
+    max-height: 10px;
+    border-radius: 10px;
 }
 .gridjs th {
     color: var(--accent2);
-    border: 1px solid black;
     background-color: var(--accent3);
     margin: 10px;
     padding: 10px;
     text-align: center;
 }
+.gridjs td {
+    font-size: 20px;
+    height: 30px;
+    overflow: hidden;
+}
 /*}}}*/
+
 
 /* Auxilliary Pages {{{*/
 #success {
@@ -199,12 +233,14 @@ input, textarea, select {
 </div>
 <div class="page" id="grid-editor">
 <h2>Veteran Crane Invoice Editor</h2>
-<div id="header" onclick="loadInvoiceSelect()">
-<div><strong>Selected invoice:</strong> <span id="invoice-name"></span><br/>(Click to Change)</div>
+<div style="display:flex; justify-content: center">
+<div id="header" onclick="loadInvoiceSelect()"><strong>Selected invoice:</strong> <span id="invoice-name"></span><br/>(Click to Change)</div>
+<div id="refresh" onclick="getLines()">Refresh 🗘</div>
 </div>
 <div id="grid-edit-table"></div>
 <div id="actions">
 <button class="action" onclick="showPage('edit-expense')">+</button>
+<button class="action" onclick="saveData()">Save</button>
 </div>
 </div>
 </div>
@@ -227,6 +263,9 @@ const SCHEMA = {
     'Employees': {
         'id': 'bsext97t8'
     },
+    'Lines': {
+        'id': 'bsgtcuxt6'
+    }
 }
 const LINEFIELDS = {
     "#line-date": 11,
@@ -241,16 +280,18 @@ const LINEFIELDS = {
 // }}}
 // Global Variables {{{
 let invoice = URLPARAMS.get('invoice');
+let grid;
+let data;
 // }}}
 
 
 // Initialization {{{
 function startup() {
-
     showPage("loading");
     getActivities()
-        .then(res => loadGridEditor());
-
+        .then(res => loadGridEditor())
+        .then(res => {if(invoice) {getInvoiceInfo();getLines()}})
+        .then(res => showPage("grid-editor"));
 }
 // }}}
 
@@ -317,11 +358,11 @@ function handleInvoices(res) {
 
         invoiceOpt.click(() => {
             invoice = res[i][3]["value"];
-            loadGridEditor();
+            showPage("loading")
+            getLines().then(res => showPage("grid-editor"));
         });
 
         invoicesLst.append(invoiceOpt)
-
     }
 }
 
@@ -340,33 +381,62 @@ function handleInvoiceInfo(res) {
 
 // Grid Editor {{{
 function loadGridEditor() {
-    if(invoice) {
-        getInvoiceInfo()
-        grid = new gridjs.Grid({ 
-            columns: [
-                {name:'Date', width:"100px"}, 
-                {name:'Activity', width:"200px"}, 
-                {name:'Description', width:"300px"},
-                {name:'Group', width:"100px"},
-                {name:'Price', width:"100px"},
-                {name:'Vendor Price', width:"200px"},
-                {name:'QTY', width:"100px"},
-                {name:'Target Margin', width:"200px"}],
-            data: [],
-            resizable: true,
-            style: {
-                table: {
-                    'overflow-x': 'auto' // Make the table scrollable vertically
-                }
-            }
-        });
-        grid.render(document.getElementById('grid-edit-table'));
+    grid = new gridjs.Grid({ 
+        columns: [
+            {name:'Date', width: "200px"}, 
+            {name:'Activity', width:"200px"}, 
+            {name:'Description', width:"300px"},
+            {name:'Line #'},
+            {name:'Price', width:"100px"},
+            {name:'Vendor Price'},
+            {name:'QTY', width:"100px"},
+            {name:'Target Margin', width:"200px", footer: (column) => column.reduce((acc, curr) => acc + curr.value, 0)},
+        ],
+        data: [['1']],
+        resizable: true,
+        autoWidth: true,
+        fixedHeader: true,
+        style: {
+        },
+    });
+    document.getElementById("grid-edit-table").addEventListener("input", function() {
+        updateSummary($(this)[0].id);
+    }, false);
+
+    grid.render(document.getElementById('grid-edit-table'));
+}
+
+const names = ["Date", "Activity", "Description", "Line #","Price","Vendor Price", "QTY","Target Margin"]
+const fields = [11,7,21,24,20,31,12,32]
+
+function getLines() {
+    return queryQuickbase({
+        "from": SCHEMA["Lines"]["id"],
+        "select": fields,
+        "where": `{15.EX.${invoice}}`
+    }).then(resj => {handleLines(resj["data"])})
+}
+
+function handleLines(resj) {
+    let list = [];
+    data = []
+    for(let i = 0; i<resj.length; i++) {
+        list.push(fields.map((field) => gridjs.html(`<div contenteditable id="${i}-${field}">${resj[i][field]["value"]}</div>`)))
+        data.push(fields.map((field) => resj[i][field]["value"]))
     }
-    showPage("grid-editor");
-}//}}}
+    grid.updateConfig({ data: list }).forceRender();
+}
 
-// Line handling {{{
+function updateSummary(k) {
+    console.log(k)
+    console.log(data.reduce((acc, elt) => acc + elt[4], 0))
+}
 
+
+//}}}
+
+
+// Line Editing {{{
 function addLine() {
     let record = {};
 
@@ -404,49 +474,6 @@ function handleActivities(resj) {
     }
 }
 
-function getLines() {
-    return queryQuickbase({
-        "from": SCHEMA["Lines"]["id"],
-        "select": [3,9,15,22],
-        "where": `{28.EX.${invoice}}AND{30.EX.${employee}}`
-    }).then(resj => handleLines(resj["data"]));
-}
-function handleLines(resj) {
-    let list = $("#lines-list");
-    list.empty();
-    for(let i = 0; i<resj.length; i++) {
-        let id = resj[i][3]["value"];
-        let expense = $("<div></div>");
-        expense.addClass("line-item");
-        expense.text(resj[i][9]["value"] + " : " + expenseDate.toLocaleString(
-            navigator.language, {
-                timeZone: "America/Los_Angeles"
-            }
-        ).split(',')[0]);
-
-        let buttons = $("<div></div>");
-        buttons.addClass("line-btn-set");
-
-        let editExpense = $("<button>Edit Expense</button>");
-        editExpense.addClass("expense-btn");
-        editExpense.click(() => {showEditExpense(id)});
-
-        buttons.append(editExpense);
-        expense.append(buttons);
-        list.append(expense);
-    }
-    if(resj.length == 0) {
-        let order = $("<div></div>");
-        order.text("No lines for this invoice yet!");
-        list.append(order);
-    }
-}
-
-function loadLinesList() {
-    showPage('loading')
-    getLines()
-        .then(res => showPage('grid-editor'))
-}
 // }}}
 
 // Quickbase Interface {{{

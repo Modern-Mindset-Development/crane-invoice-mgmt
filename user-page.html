@@ -36,8 +36,9 @@
 
             <div id="grid-editor" class="page">
                 <h2>Veteran Crane Invoice Editor</h2>
-                <div id="header" onclick=loadInvoiceSelect()>
-                    <div><strong>Selected invoice:</strong> <span id="invoice-name"></span><br>(Click to Change)</div>
+                <div style="display:flex; justify-content: center">
+                    <div id="header" onclick=loadInvoiceSelect()><strong>Selected invoice:</strong> <span id="invoice-name"></span><br>(Click to Change)</div>
+                    <div id="refresh" onclick=getLines()>Refresh 🗘</div>
                 </div>
                 <div id="grid-edit-table"></div>
                 <div id="actions">

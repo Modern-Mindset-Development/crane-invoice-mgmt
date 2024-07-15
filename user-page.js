@@ -153,7 +153,7 @@ function loadGridEditor() {
         },
     });
     document.getElementById("grid-edit-table").addEventListener("input", function() {
-        console.log("input event fired");
+        updateSummary($(this)[0].id);
     }, false);
 
     grid.render(document.getElementById('grid-edit-table'));
@@ -172,15 +172,17 @@ function getLines() {
 
 function handleLines(resj) {
     let list = [];
+    data = []
     for(let i = 0; i<resj.length; i++) {
-        list.push(fields.map((field) => gridjs.html(`<div contenteditable>${resj[i][field]["value"]}</div>`)))
+        list.push(fields.map((field) => gridjs.html(`<div contenteditable id="${i}-${field}">${resj[i][field]["value"]}</div>`)))
+        data.push(fields.map((field) => resj[i][field]["value"]))
     }
-    data = list;
     grid.updateConfig({ data: list }).forceRender();
 }
 
-function updateSummary() {
-    console.log(fields.reduce((acc, elt) => acc + data[7][elt]))
+function updateSummary(k) {
+    console.log(k)
+    console.log(data.reduce((acc, elt) => acc + elt[4], 0))
 }
 
 
