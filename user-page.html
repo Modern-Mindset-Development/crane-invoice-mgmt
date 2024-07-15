@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang='en'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <head>
+        <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js'></script>
+        
+        <link href='https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/ui-lightness/jquery-ui.css' rel='stylesheet'>
+        <script src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js'></script>
+
+        <link href='https://unpkg.com/gridjs/dist/theme/mermaid.min.css' rel='stylesheet'>
+        <script src='https://unpkg.com/gridjs/dist/gridjs.umd.js'></script>
+
+        <link rel='stylesheet' href='user-page.css'>
+    </head>
+    <body onload="startup()">
+        <div id="page-content">
+            <div id="loading" class="page">
+                <div style="display: flex; justify-content: center">
+                    <div id="loader"></div>
+                </div>
+            </div>
+
+            <div id="success" class="page">
+                <div style="font-size: 150px">✅</div>
+                <div style="font-size: 30px; margin-bottom: 30px;">Success!</div>
+                <button class="action" style="height:40px" onclick=loadHome()>Go Back</button>
+                <button class="action" style="height:40px" onclick=redirect()>Renewance Home</button>
+            </div>
+
+            <div id="invoice-select" class="page">
+                <h3>Choose an invoice</h3>
+                <input type="text" id="invoice-search" onkeyup="invoiceSearch('invoice-search', 'invoice-list')" placeholder="Search for invoices.."> 
+                <ul id="invoice-list">
+                </ul>
+            </div>
+
+            <div id="grid-editor" class="page">
+                <h2>Veteran Crane Invoice Editor</h2>
+                <div id="header" onclick=loadInvoiceSelect()>
+                    <div><strong>Selected invoice:</strong> <span id="invoice-name"></span><br>(Click to Change)</div>
+                </div>
+                <div id="grid-edit-table"></div>
+                <div id="actions">
+                    <button class="action" onclick=showPage('edit-expense')>+</button>
+                </div>
+            </div>
+        </div>
+        <script src="user-page.js"></script>
+    </body>
+</html>
