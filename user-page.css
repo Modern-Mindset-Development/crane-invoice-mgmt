@@ -17,7 +17,7 @@ html, body {
     height: 95%;
 }
 body {
-    font-family: 'Montserrat', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Raleway', 'Montserrat', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--main-bg-color);
     color: var(--accent2);
     display: flex;
@@ -111,8 +111,8 @@ input, textarea, select {
     border-radius: 5px;
     text-align: left;
     overflow: auto;
-    max-height: 400px;
     scrollbar-width: none;
+    height: 80%;
 }
 #invoice-list li {
     border: 1px solid var(--main-bg-color);
@@ -124,6 +124,7 @@ input, textarea, select {
     display: block;
     border-radius: 5px;
     cursor: pointer;
+    text-align: center;
 }/*}}}*/
 
 /* Grid Edit{{{*/
@@ -141,37 +142,46 @@ input, textarea, select {
     text-align: left;
 }
 
-#grid-edit-table {
+#table-div {
     width: 100%; /* Set the width of the table container */
     overflow-x: auto; /* Enable horizontal scrolling */
-    overflow-y: auto;
+    overflow-y: scroll;
     height: 75%;
 }
 
-.gridjs table {
-    max-height: 500px;
-    overflow-y: scroll;
+table {
+    border-collapse: separate;
 }
 
-.gridjs tr {
+tr {
     background-color: var(--accent2);
     margin: 10px;
     padding: 10px;
     text-align: center;
     max-height: 10px;
-    border-radius: 10px;
 }
-.gridjs th {
-    color: var(--accent2);
+th {
+    position: sticky;
+    top: 0;
+    color: black;
     background-color: var(--accent3);
     margin: 10px;
     padding: 10px;
     text-align: center;
+    border: 0.5px solid black;
 }
-.gridjs td {
+td {
+    color: black;
+    padding: 5px;
     font-size: 20px;
-    height: 30px;
+    height: 10px;
     overflow: hidden;
+}
+
+#summary-row {
+    position: sticky;
+    bottom: 0;
+    background-color: var(--accent3);
 }
 /*}}}*/
 

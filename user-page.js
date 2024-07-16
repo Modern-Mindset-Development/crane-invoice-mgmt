@@ -134,65 +134,74 @@ function handleInvoiceInfo(res) {
 
 // Grid Editor {{{
 function loadGridEditor() {
-    grid = new gridjs.Grid({ 
-        columns: [
-            {name:'Date', width: "200px"}, 
-            {name:'Activity', width:"200px"}, 
-            {name:'Description', width:"300px"},
-            {name:'Line #'},
-            {name:'Price', width:"100px"},
-            {name:'Vendor Price'},
-            {name:'QTY', width:"100px"},
-            {name:'Target Margin', width:"200px", footer: (column) => column.reduce((acc, curr) => acc + curr.value, 0)},
-        ],
-        data: [['1']],
-        resizable: true,
-        autoWidth: true,
-        fixedHeader: true,
-        className: {
-            td: 'edit-cell'
-        }
-    });
-
-
     document.getElementById("grid-edit-table").addEventListener('input', function(event) {
         let cell = event.target
-        updateSummary(cell);
-    });
+        const rowIndex = cell.id.split("-")[0]; // Adjust for header row
+        const field = cell.id.split("-")[1];
+        const newVal = parseFloat(cell.textContent)
+        data[rowIndex][field]["value"] = newVal
 
-    grid.render(document.getElementById('grid-edit-table'));
+        updateSummary(field);
+    });
 }
 
-const names = ["Date", "Activity", "Description", "Line #","Price","Vendor Price", "QTY","Target Margin"]
-const fields = [11,7,21,24,20,31,12,32]
+const fields = [11,7,19,24,18,31,12,32]
 
 function getLines() {
     return queryQuickbase({
         "from": SCHEMA["Lines"]["id"],
-        "select": fields,
+        "select": [3].concat(fields),
         "where": `{15.EX.${invoice}}`
-    }).then(resj => {handleLines(resj["data"])})
+    }).then(resj => {handleLines(resj)})
 }
 
 function handleLines(resj) {
+    let table = document.getElementById("grid-edit-table")
+
+    data = {}
+    resj['data'].forEach(record => {data[record[3]['value']] = record})
+
+    let field_names = resj['fields']
     let list = [];
-    data = []
-    for(let i = 0; i<resj.length; i++) {
-        list.push(fields.map((field) => gridjs.html(`<div contenteditable id="${i}-${field}">${resj[i][field]["value"]}</div>`)))
-        data.push(fields.map((field) => resj[i][field]["value"]))
+
+    header_row = document.createElement("tr") 
+    for(let j = 1; j<field_names.length; j++) {
+        let new_header = document.createElement("th")
+        new_header.textContent = field_names[j]['label']
+        header_row.append(new_header)
     }
-    grid.updateConfig({ data: list }).forceRender();
+    table.append(header_row)
+
+    for (const [id, record] of Object.entries(data)) {
+        let row = document.createElement("tr")
+        for(let j = 1; j<field_names.length; j++) {
+            new_cell = document.createElement("td")
+            new_cell.setAttribute("contenteditable", "")
+            new_cell.id = `${id}-${field_names[j]['id']}`
+            new_cell.textContent = data[id][field_names[j]['id']]["value"]
+            row.append(new_cell)
+        }
+        table.append(row)
+    }
+
+    summary_row = document.createElement("tr") 
+    summary_row.id = "summary-row";
+    for(let j = 1; j<field_names.length; j++) {
+        let new_sum = document.createElement("td")
+        new_sum.textContent = "-"
+        new_sum.id = `summary-${field_names[j]['id']}`
+        summary_row.append(new_sum)
+    }
+    table.append(summary_row)
+
+    updateSummary(0, true)
 }
 
-function updateSummary(cell) {
-    const rowIndex = cell.id.split("-")[0]; // Adjust for header row
-    const field = cell.id.split("-")[1];
-    
-    if(field == 20) {
-        data[rowIndex][4] = parseFloat(cell.textContent.trim())
-        console.log(data.reduce((acc, elt) => acc + elt[4], 0))
+function updateSummary(field=0, setAll=false) { 
+    if(field==18 || setAll) {
+        sum = Object.entries(data).reduce((acc, elt) => acc + elt[1][18]["value"], 0)
+        document.getElementById("summary-18").textContent = sum
     }
-
 }
 
 

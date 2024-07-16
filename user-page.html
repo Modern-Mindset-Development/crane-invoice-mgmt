@@ -7,9 +7,6 @@
         <link href='https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/ui-lightness/jquery-ui.css' rel='stylesheet'>
         <script src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js'></script>
 
-        <link href='https://unpkg.com/gridjs/dist/theme/mermaid.min.css' rel='stylesheet'>
-        <script src='https://unpkg.com/gridjs/dist/gridjs.umd.js'></script>
-
         <link rel='stylesheet' href='user-page.css'>
     </head>
     <body onload="startup()">
@@ -40,7 +37,10 @@
                     <div id="header" onclick=loadInvoiceSelect()><strong>Selected invoice:</strong> <span id="invoice-name"></span><br>(Click to Change)</div>
                     <div id="refresh" onclick=getLines()>Refresh 🗘</div>
                 </div>
-                <div id="grid-edit-table"></div>
+                <div id="table-div">
+                <table id="grid-edit-table">
+                </table>
+                </div>
                 <div id="actions">
                     <button class="action" onclick=showPage('edit-expense')>+</button>
                     <button class="action" onclick=saveData()>Save</button>
