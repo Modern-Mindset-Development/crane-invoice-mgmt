@@ -19,9 +19,12 @@
 
             <div id="success" class="page">
                 <div style="font-size: 150px">✅</div>
-                <div style="font-size: 30px; margin-bottom: 30px;">Success!</div>
-                <button class="action" style="height:40px" onclick=loadHome()>Go Back</button>
-                <button class="action" style="height:40px" onclick=redirect()>Renewance Home</button>
+                <div style="font-size: 30px; margin-bottom: 30px; color:white">Success!</div>
+
+                <div id="success-btn-div">
+                    <button class="action" style="height:40px" onclick=loadEditor()>Go Back</button>
+                    <button class="action" style="height:40px" onclick=redirect()>Back to Invoice</button>
+                </div>
             </div>
 
             <div id="invoice-select" class="page">
@@ -42,7 +45,7 @@
                 </table>
                 </div>
                 <div id="actions">
-                    <button class="action" onclick=showPage('edit-expense')>+</button>
+                    <button class="action" onclick=addLine()>+</button>
                     <button class="action" onclick=saveData()>Save</button>
                 </div>
             </div>

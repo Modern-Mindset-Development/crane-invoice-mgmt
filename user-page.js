@@ -33,7 +33,8 @@ const LINEFIELDS = {
 // }}}
 // Global Variables {{{
 let invoice = URLPARAMS.get('invoice');
-let grid;
+let changes = [];
+let subtotals;
 let data;
 // }}}
 
@@ -42,9 +43,7 @@ let data;
 function startup() {
     showPage("loading");
     getActivities()
-        .then(res => loadGridEditor())
-        .then(res => {if(invoice) {getInvoiceInfo();getLines()}})
-        .then(res => showPage("grid-editor"));
+        .then(res => {if(invoice) {getInvoiceInfo();loadEditor()} else {loadInvoiceSelect()}})
 }
 // }}}
 
@@ -112,7 +111,7 @@ function handleInvoices(res) {
         invoiceOpt.click(() => {
             invoice = res[i][3]["value"];
             showPage("loading")
-            getLines().then(res => showPage("grid-editor"));
+            loadEditor();
         });
 
         invoicesLst.append(invoiceOpt)
@@ -133,54 +132,59 @@ function handleInvoiceInfo(res) {
 // }}}
 
 // Grid Editor {{{
-function loadGridEditor() {
-    document.getElementById("grid-edit-table").addEventListener('input', function(event) {
-        let cell = event.target
-        const rowIndex = cell.id.split("-")[0]; // Adjust for header row
-        const field = cell.id.split("-")[1];
-        const newVal = parseFloat(cell.textContent)
-        data[rowIndex][field]["value"] = newVal
+const fields = [3,11,7,19,24,18,31,12,32]
+let field_names = [];
 
-        updateSummary(field);
-    });
+function loadEditor() {
+    showPage("loading")
+    getLines().then(res => showPage("grid-editor"))
 }
-
-const fields = [11,7,19,24,18,31,12,32]
 
 function getLines() {
     return queryQuickbase({
         "from": SCHEMA["Lines"]["id"],
-        "select": [3].concat(fields),
+        "select": fields,
         "where": `{15.EX.${invoice}}`
     }).then(resj => {handleLines(resj)})
 }
 
 function handleLines(resj) {
     let table = document.getElementById("grid-edit-table")
+    table.innerHTML = ""
 
-    data = {}
-    resj['data'].forEach(record => {data[record[3]['value']] = record})
+    data = resj["data"].map(record => {return fields.map(field => record[field]["value"])})
 
-    let field_names = resj['fields']
+    field_names = resj['fields'].map(field => field["label"])
     let list = [];
 
     header_row = document.createElement("tr") 
     for(let j = 1; j<field_names.length; j++) {
         let new_header = document.createElement("th")
-        new_header.textContent = field_names[j]['label']
+        new_header.textContent = field_names[j]
         header_row.append(new_header)
     }
+
+    st_header = document.createElement("th")
+    st_header.textContent = "Subtotal"
+    header_row.append(st_header)
+
     table.append(header_row)
 
-    for (const [id, record] of Object.entries(data)) {
+    for (let i = 0; i < data.length; i++) {
         let row = document.createElement("tr")
         for(let j = 1; j<field_names.length; j++) {
             new_cell = document.createElement("td")
             new_cell.setAttribute("contenteditable", "")
-            new_cell.id = `${id}-${field_names[j]['id']}`
-            new_cell.textContent = data[id][field_names[j]['id']]["value"]
+            new_cell.id = `${i}-${j}`
+            new_cell.textContent = data[i][j]
             row.append(new_cell)
         }
+
+        new_cell = document.createElement("td")
+        new_cell.id = `${i}-subtotal`
+        new_cell.textContent = data[i][5]*data[i][7]
+        row.append(new_cell)
+
         table.append(row)
     }
 
@@ -189,47 +193,78 @@ function handleLines(resj) {
     for(let j = 1; j<field_names.length; j++) {
         let new_sum = document.createElement("td")
         new_sum.textContent = "-"
-        new_sum.id = `summary-${field_names[j]['id']}`
+        new_sum.id = `summary-${j}`
         summary_row.append(new_sum)
     }
+
+    new_sum = document.createElement("td")
+    new_sum.textContent = "-"
+    new_sum.id = "grand-total"
+    summary_row.append(new_sum)
+
     table.append(summary_row)
 
-    updateSummary(0, true)
-}
+    document.getElementById("grid-edit-table").addEventListener('input', updateCell);
+    
+    for(let i=0; i<field_names.length; i++) {
+        updateSummary(i)
+    }
 
-function updateSummary(field=0, setAll=false) { 
-    if(field==18 || setAll) {
-        sum = Object.entries(data).reduce((acc, elt) => acc + elt[1][18]["value"], 0)
-        document.getElementById("summary-18").textContent = sum
+    subtotals = new Array(data.length)
+    for(let i=0; i<data.length; i++) {
+        updateSubtotal(i)
     }
 }
 
+function updateCell(event) {
+    let cell = event.target
+    const rowIndex = cell.id.split("-")[0]; // Adjust for header row
+    const colIndex = cell.id.split("-")[1];
+    const newVal = parseFloat(cell.textContent)
+    data[rowIndex][colIndex] = newVal
+    updateSummary(rowIndex, colIndex);
+    updateSubtotal(rowIndex);
+
+    addChange(rowIndex, colIndex, newVal)
+}
+
+function updateSummary(rowIndex, colIndex) { 
+    if(field_names[colIndex]=="Edit Price") {
+        sum = data.reduce((acc, elt) => acc + elt[colIndex], 0)
+        document.getElementById(`summary-${colIndex}`).textContent = sum
+    }
+}
+
+function updateSubtotal(rowIndex) { 
+    subtotals[rowIndex] = data[rowIndex][5] * data[rowIndex][7]
+    document.getElementById(`${rowIndex}-subtotal`).textContent = subtotals[rowIndex]
+
+    grandTotal = subtotals.reduce((acc,elt) => acc + elt, 0)
+    document.getElementById(`grand-total`).textContent = grandTotal
+}
+
+function addChange(rowIndex, colIndex, newVal) {
+    let field = fields[colIndex]
+    let record_id = data[rowIndex][0]
+    let change = {}
+
+    index = changes.findIndex(change => change[3]["value"] == record_id)
+    if(index == -1) {
+        index = changes.length
+        changes.push({3: {"value": record_id}})
+    }
+    changes[index][field] = {}
+    changes[index][field]["value"] = newVal
+}
+
+function saveData() {
+    addRecords(SCHEMA["Lines"]["id"], changes)
+}
 
 //}}}
 
 
-// Line Editing {{{
-function addLine() {
-    let record = {};
-
-    if(expenseId) {
-        record["3"] = {"value": expenseId}; // Record ID to modify if applicable
-    }
-
-    record["28"] = {"value": invoice}
-    record["29"] = {"value": order}
-    record["30"] = {"value": employee}
-    for(const prop in elt_lookup) {
-        record[elt_lookup[prop]] = {"value": $(prop).val()}
-    }
-
-    return addRecord(SCHEMA["Lines"]["id"], record)
-        .then(res => res.json())
-        .then(res => addDocument(res["metadata"]["createdRecordIds"][0]))
-        .then(res => {$("#modify-form")[0].reset()})
-        .then(res => showPage('success'));
-}
-
+// Activities {{{
 function getActivities() {
     return queryQuickbase({
         "from": SCHEMA["Activities"]["id"],
@@ -250,7 +285,7 @@ function handleActivities(resj) {
 
 // Quickbase Interface {{{
 
-function addRecord(table, record_data) {
+function addRecords(table, record_data) {
     showPage("loading");
     return authenticatedInstance(table, (key) => {
         let headers = HEADERS;
@@ -258,13 +293,13 @@ function addRecord(table, record_data) {
 
         let body = {
             "to": table,
-            "data": [record_data]
+            "data": record_data
         }
         return fetch("https://api.quickbase.com/v1/records", {
             method: 'POST',
             headers: headers,
             body: JSON.stringify(body)
-        })
+        }).then(res => showPage("success"));
     });
 }
 
@@ -312,6 +347,6 @@ function toIsoString(date) {
 }
 
 function redirect() {
-    window.location.replace("https://lift.quickbase.com/db/bt5ywn6kq/");
+    window.location.replace(`https://veterancrane.quickbase.com/db/bsg43ze29/form?a=dr&rid=${invoice}&rl=dmv&page=1`);
 }
 //}}}

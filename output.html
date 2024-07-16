@@ -4,8 +4,6 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/ui-lightness/jquery-ui.css" rel="stylesheet"/>
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-<link href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css" rel="stylesheet"/>
-<script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
 
 <style>:root {
     --side-bg-color: #1d4193;
@@ -26,7 +24,7 @@ html, body {
     height: 95%;
 }
 body {
-    font-family: 'Montserrat', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Raleway', 'Montserrat', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--main-bg-color);
     color: var(--accent2);
     display: flex;
@@ -120,8 +118,8 @@ input, textarea, select {
     border-radius: 5px;
     text-align: left;
     overflow: auto;
-    max-height: 400px;
     scrollbar-width: none;
+    height: 80%;
 }
 #invoice-list li {
     border: 1px solid var(--main-bg-color);
@@ -133,6 +131,7 @@ input, textarea, select {
     display: block;
     border-radius: 5px;
     cursor: pointer;
+    text-align: center;
 }/*}}}*/
 
 /* Grid Edit{{{*/
@@ -150,37 +149,46 @@ input, textarea, select {
     text-align: left;
 }
 
-#grid-edit-table {
+#table-div {
     width: 100%; /* Set the width of the table container */
     overflow-x: auto; /* Enable horizontal scrolling */
-    overflow-y: auto;
+    overflow-y: scroll;
     height: 75%;
 }
 
-.gridjs table {
-    max-height: 500px;
-    overflow-y: scroll;
+table {
+    border-collapse: separate;
 }
 
-.gridjs tr {
+tr {
     background-color: var(--accent2);
     margin: 10px;
     padding: 10px;
     text-align: center;
     max-height: 10px;
-    border-radius: 10px;
 }
-.gridjs th {
-    color: var(--accent2);
+th {
+    position: sticky;
+    top: 0;
+    color: black;
     background-color: var(--accent3);
     margin: 10px;
     padding: 10px;
     text-align: center;
+    border: 0.5px solid black;
 }
-.gridjs td {
+td {
+    color: black;
+    padding: 5px;
     font-size: 20px;
-    height: 30px;
+    height: 10px;
     overflow: hidden;
+}
+
+#summary-row {
+    position: sticky;
+    bottom: 0;
+    background-color: var(--accent3);
 }
 /*}}}*/
 
@@ -237,7 +245,10 @@ input, textarea, select {
 <div id="header" onclick="loadInvoiceSelect()"><strong>Selected invoice:</strong> <span id="invoice-name"></span><br/>(Click to Change)</div>
 <div id="refresh" onclick="getLines()">Refresh 🗘</div>
 </div>
-<div id="grid-edit-table"></div>
+<div id="table-div">
+<table id="grid-edit-table">
+</table>
+</div>
 <div id="actions">
 <button class="action" onclick="showPage('edit-expense')">+</button>
 <button class="action" onclick="saveData()">Save</button>
@@ -381,55 +392,74 @@ function handleInvoiceInfo(res) {
 
 // Grid Editor {{{
 function loadGridEditor() {
-    grid = new gridjs.Grid({ 
-        columns: [
-            {name:'Date', width: "200px"}, 
-            {name:'Activity', width:"200px"}, 
-            {name:'Description', width:"300px"},
-            {name:'Line #'},
-            {name:'Price', width:"100px"},
-            {name:'Vendor Price'},
-            {name:'QTY', width:"100px"},
-            {name:'Target Margin', width:"200px", footer: (column) => column.reduce((acc, curr) => acc + curr.value, 0)},
-        ],
-        data: [['1']],
-        resizable: true,
-        autoWidth: true,
-        fixedHeader: true,
-        style: {
-        },
-    });
-    document.getElementById("grid-edit-table").addEventListener("input", function() {
-        updateSummary($(this)[0].id);
-    }, false);
+    document.getElementById("grid-edit-table").addEventListener('input', function(event) {
+        let cell = event.target
+        const rowIndex = cell.id.split("-")[0]; // Adjust for header row
+        const field = cell.id.split("-")[1];
+        const newVal = parseFloat(cell.textContent)
+        data[rowIndex][field]["value"] = newVal
 
-    grid.render(document.getElementById('grid-edit-table'));
+        updateSummary(field);
+    });
 }
 
-const names = ["Date", "Activity", "Description", "Line #","Price","Vendor Price", "QTY","Target Margin"]
-const fields = [11,7,21,24,20,31,12,32]
+const fields = [11,7,19,24,18,31,12,32]
 
 function getLines() {
     return queryQuickbase({
         "from": SCHEMA["Lines"]["id"],
-        "select": fields,
+        "select": [3].concat(fields),
         "where": `{15.EX.${invoice}}`
-    }).then(resj => {handleLines(resj["data"])})
+    }).then(resj => {handleLines(resj)})
 }
 
 function handleLines(resj) {
+    let table = document.getElementById("grid-edit-table")
+
+    data = {}
+    resj['data'].forEach(record => {data[record[3]['value']] = record})
+
+    let field_names = resj['fields']
     let list = [];
-    data = []
-    for(let i = 0; i<resj.length; i++) {
-        list.push(fields.map((field) => gridjs.html(`<div contenteditable id="${i}-${field}">${resj[i][field]["value"]}</div>`)))
-        data.push(fields.map((field) => resj[i][field]["value"]))
+
+    header_row = document.createElement("tr") 
+    for(let j = 1; j<field_names.length; j++) {
+        let new_header = document.createElement("th")
+        new_header.textContent = field_names[j]['label']
+        header_row.append(new_header)
     }
-    grid.updateConfig({ data: list }).forceRender();
+    table.append(header_row)
+
+    for (const [id, record] of Object.entries(data)) {
+        let row = document.createElement("tr")
+        for(let j = 1; j<field_names.length; j++) {
+            new_cell = document.createElement("td")
+            new_cell.setAttribute("contenteditable", "")
+            new_cell.id = `${id}-${field_names[j]['id']}`
+            new_cell.textContent = data[id][field_names[j]['id']]["value"]
+            row.append(new_cell)
+        }
+        table.append(row)
+    }
+
+    summary_row = document.createElement("tr") 
+    summary_row.id = "summary-row";
+    for(let j = 1; j<field_names.length; j++) {
+        let new_sum = document.createElement("td")
+        new_sum.textContent = "-"
+        new_sum.id = `summary-${field_names[j]['id']}`
+        summary_row.append(new_sum)
+    }
+    table.append(summary_row)
+
+    updateSummary(0, true)
 }
 
-function updateSummary(k) {
-    console.log(k)
-    console.log(data.reduce((acc, elt) => acc + elt[4], 0))
+function updateSummary(field=0, setAll=false) { 
+    if(field==18 || setAll) {
+        sum = Object.entries(data).reduce((acc, elt) => acc + elt[1][18]["value"], 0)
+        document.getElementById("summary-18").textContent = sum
+    }
 }
 
 
