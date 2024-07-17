@@ -195,13 +195,14 @@ td {
 
 .popup {
     display: none;
+    padding: 30px;
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     background-color: var(--side-bg-color);
-    width: 80%;
-    height: 80%;
+    width: 50%;
+    height: 40%;
 }
 
 /* Auxilliary Pages {{{*/

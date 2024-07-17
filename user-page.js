@@ -36,6 +36,7 @@ let invoice = URLPARAMS.get('invoice');
 let changes = [];
 let nextid = -1;
 let subtotals;
+let activities= {}
 let data;
 // }}}
 
@@ -194,7 +195,7 @@ function handleLines(resj) {
     updateGrand()
 
 
-    document.getElementById("grid-edit-table").addEventListener('input', updateCell);
+    document.getElementById("grid-edit-table").addEventListener('input', event => updateCell(event.target));
 }
 // Editing the Grid{{{
 
@@ -207,13 +208,14 @@ function addChangeEntry(record_id) {
     return index
 }
 
-function updateCell(event) {
-    let cell = event.target
+function updateCell(cell, newVal=null) {
     const rowIndex = cell.id.split("-")[0]; // Adjust for header row
     const record_id = data[rowIndex][0]
 
     const colIndex = cell.id.split("-")[1];
-    const newVal = cell.textContent
+    if(newVal == null) {
+        newVal = cell.textContent
+    }
 
     if(colIndex == "delete") {
         index = addChangeEntry(record_id)
@@ -301,6 +303,12 @@ function genRow(rowIndex) {
         c.id = `${rowIndex}-${j}`
         c.setAttribute("contenteditable", "")
         c.textContent = data[rowIndex][j]
+        if(fields[j] == 6) {
+            x = c
+            c.onclick = function() {openActivity(x)}
+            c.textContent = activities[data[rowIndex][j]]
+            c.removeAttribute("contenteditable","")
+        }
     }
     c = r.insertCell()
     c.id = `${rowIndex}-subtotal`
@@ -334,8 +342,28 @@ function handleActivities(resj) {
         var opt = document.createElement("option");
         opt.value = resj[i][3]["value"];
         opt.innerHTML = resj[i][6]["value"];
+        activities[resj[i][3]["value"]] = resj[i][6]["value"]
         $("#activities").append(opt);
     }
+}
+
+let modifying;
+function openActivity(c) {
+    $(".popup").show() 
+    $("#activities").val(data[c.id.split("-")[0]][c.id.split("-")[1]])
+    modifying=c
+}
+function saveActivity() {
+    modifying.innerHTML = activities[$("#activities").val()]
+    updateCell(modifying, $("#activities").val())
+
+    record_id = data[modifying.id.split("-")[0]][0]
+    addChangeEntry(record_id)
+    addChange(modifying.id.split("-")[0], modifying.id.split("-")[1])
+    $(".popup").hide()
+}
+function cancelActivity() {
+    $(".popup").hide()
 }
 
 // }}}
