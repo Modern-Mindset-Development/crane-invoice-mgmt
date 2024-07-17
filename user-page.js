@@ -220,6 +220,7 @@ function updateCell(event) {
         changes[index][15] = {"value": cell.checked ? "" : invoice}
     } else {
         data[rowIndex][colIndex] = newVal
+        addChange(rowIndex, colIndex)
         updateSummary(rowIndex, colIndex)
     }
 }
