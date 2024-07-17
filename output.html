@@ -200,6 +200,16 @@ td {
 }
 /*}}}*/
 
+.popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--side-bg-color);
+    width: 80%;
+    height: 80%;
+}
 
 /* Auxilliary Pages {{{*/
 #success {
@@ -260,9 +270,12 @@ td {
 </table>
 </div>
 <div id="actions">
-<button class="action" onclick="addLine()">+</button>
+<button class="action" onclick="newLine()">+</button>
 <button class="action" onclick="saveData()">Save</button>
 </div>
+</div>
+<div class="popup" id="select-activity">
+<h2>Activity</h2>
 </div>
 </div>
 
@@ -302,6 +315,7 @@ const LINEFIELDS = {
 // Global Variables {{{
 let invoice = URLPARAMS.get('invoice');
 let changes = [];
+let nextid = -1;
 let subtotals;
 let data;
 // }}}
@@ -400,7 +414,8 @@ function handleInvoiceInfo(res) {
 // }}}
 
 // Grid Editor {{{
-const fields = [3,11,7,19,24,18,31,12,32]
+const fields = [3,11,6,19,26,18,31,12,32]
+const default_vals = [-1,"","","","",0,"",0,0.3]
 let field_names = [];
 
 function loadEditor() {
@@ -425,7 +440,7 @@ function handleLines(resj) {
     field_names = resj['fields'].map(field => field["label"])
     let list = [];
 
-    header_row = document.createElement("tr") 
+    header_row = table.insertRow()
     for(let j = 1; j<field_names.length; j++) {
         let new_header = document.createElement("th")
         new_header.textContent = field_names[j]
@@ -436,101 +451,155 @@ function handleLines(resj) {
     st_header.textContent = "Subtotal"
     header_row.append(st_header)
 
-    table.append(header_row)
-
-    for (let i = 0; i < data.length; i++) {
-        let row = document.createElement("tr")
-        for(let j = 1; j<field_names.length; j++) {
-            new_cell = document.createElement("td")
-            new_cell.setAttribute("contenteditable", "")
-            new_cell.id = `${i}-${j}`
-            new_cell.textContent = data[i][j]
-            row.append(new_cell)
-        }
-
-        new_cell = document.createElement("td")
-        new_cell.id = `${i}-subtotal`
-        new_cell.textContent = data[i][5]*data[i][7]
-        row.append(new_cell)
-
-        table.append(row)
-    }
-
-    summary_row = document.createElement("tr") 
-    summary_row.id = "summary-row";
-    for(let j = 1; j<field_names.length; j++) {
-        let new_sum = document.createElement("td")
-        new_sum.textContent = "-"
-        new_sum.id = `summary-${j}`
-        summary_row.append(new_sum)
-    }
-
-    new_sum = document.createElement("td")
-    new_sum.textContent = "-"
-    new_sum.id = "grand-total"
-    summary_row.append(new_sum)
-
-    table.append(summary_row)
-
-    document.getElementById("grid-edit-table").addEventListener('input', updateCell);
-    
-    for(let i=0; i<field_names.length; i++) {
-        updateSummary(i)
-    }
+    del_header = document.createElement("th")
+    del_header.textContent = "Delete"
+    header_row.append(del_header)
 
     subtotals = new Array(data.length)
-    for(let i=0; i<data.length; i++) {
-        updateSubtotal(i)
+    for (let i = 0; i < data.length; i++) {
+        genRow(i)
     }
-}
 
-function updateCell(event) {
-    let cell = event.target
-    const rowIndex = cell.id.split("-")[0]; // Adjust for header row
-    const colIndex = cell.id.split("-")[1];
-    const newVal = parseFloat(cell.textContent)
-    data[rowIndex][colIndex] = newVal
-    updateSummary(rowIndex, colIndex);
-    updateSubtotal(rowIndex);
-
-    addChange(rowIndex, colIndex, newVal)
-}
-
-function updateSummary(rowIndex, colIndex) { 
-    if(field_names[colIndex]=="Edit Price") {
-        sum = data.reduce((acc, elt) => acc + elt[colIndex], 0)
-        document.getElementById(`summary-${colIndex}`).textContent = sum
+    summary_row = table.insertRow()
+    summary_row.id = "summary-row";
+    for(let j = 1; j<field_names.length; j++) {
+        let new_sum = summary_row.insertCell()
+        new_sum.textContent = "-"
+        new_sum.id = `summary-${j}`
     }
+
+    new_sum = summary_row.insertCell()
+    new_sum.textContent = "-"
+    new_sum.id = "grand-total"
+
+    updateGrand()
+
+
+    document.getElementById("grid-edit-table").addEventListener('input', updateCell);
 }
+// Editing the Grid{{{
 
-function updateSubtotal(rowIndex) { 
-    subtotals[rowIndex] = data[rowIndex][5] * data[rowIndex][7]
-    document.getElementById(`${rowIndex}-subtotal`).textContent = subtotals[rowIndex]
-
-    grandTotal = subtotals.reduce((acc,elt) => acc + elt, 0)
-    document.getElementById(`grand-total`).textContent = grandTotal
-}
-
-function addChange(rowIndex, colIndex, newVal) {
-    let field = fields[colIndex]
-    let record_id = data[rowIndex][0]
-    let change = {}
-
+function addChangeEntry(record_id) {
     index = changes.findIndex(change => change[3]["value"] == record_id)
     if(index == -1) {
         index = changes.length
         changes.push({3: {"value": record_id}})
     }
-    changes[index][field] = {}
-    changes[index][field]["value"] = newVal
+    return index
 }
 
+function updateCell(event) {
+    let cell = event.target
+    const rowIndex = cell.id.split("-")[0]; // Adjust for header row
+    const record_id = data[rowIndex][0]
+
+    const colIndex = cell.id.split("-")[1];
+    const newVal = cell.textContent
+
+    if(colIndex == "delete") {
+        index = addChangeEntry(record_id)
+        changes[index][15] = {"value": cell.checked ? "" : invoice}
+    } else {
+        data[rowIndex][colIndex] = newVal
+        updateSummary(rowIndex, colIndex)
+    }
+}
+
+function addChange(rowIndex, colIndex) {
+    index = addChangeEntry(data[rowIndex][0])
+
+    let field = fields[colIndex]
+    changes[index][field] = {"value": data[rowIndex][colIndex]}
+}//}}}
+
+// Update summary stats {{{
+function updateSummary(rowIndex, colIndex) {
+    // if(field_names[colIndex]=="Edit Price") {
+    //     sum = data.reduce((acc, elt) => acc + elt[colIndex], 0)
+    //     document.getElementById(`summary-${colIndex}`).textContent = sum
+    // }
+    updateSubtotal(rowIndex);
+    updateGrand();
+}
+
+function noNull(x) {
+    if(isNaN(x)) {
+        return 0
+    }
+    return x
+}
+
+function updateSubtotal(rowIndex) { 
+    subtotals[rowIndex] = noNull(data[rowIndex][5] * data[rowIndex][7])
+
+    document.getElementById(`${rowIndex}-subtotal`).textContent = subtotals[rowIndex]
+}
+
+function updateGrand() { 
+    grandTotal = subtotals.reduce((acc,elt) => acc + elt, 0)
+    document.getElementById(`grand-total`).textContent = grandTotal
+}
+//}}}
+
+
+
 function saveData() {
+    for(let i = 0; i<changes.length; i++) {
+        if(changes[i][3]["value"] < 0) {
+            delete changes[i][3]
+
+            // Change the related invoice
+            changes[i][15] = {}
+            changes[i][15]["value"] = invoice;
+        }
+    }
     addRecords(SCHEMA["Lines"]["id"], changes)
+    changes = []
+}
+
+function newLine(values=default_vals) {
+    newRowIndex = data.length
+
+    data.push(structuredClone(values))
+    data[newRowIndex][0] = nextid
+    
+    for(let j = 1; j < field_names.length; j++) {
+        addChange(newRowIndex, j)
+    }
+
+    genRow(newRowIndex)
+    nextid -= 1;
+}
+
+function genRow(rowIndex) {
+    // Visually generate the new row and update values
+    table = document.getElementById("grid-edit-table")
+    r = table.insertRow(rowIndex + 1)
+
+    for(let j = 1; j<field_names.length; j++) {
+        c = r.insertCell()
+        c.id = `${rowIndex}-${j}`
+        c.setAttribute("contenteditable", "")
+        c.textContent = data[rowIndex][j]
+    }
+    c = r.insertCell()
+    c.id = `${rowIndex}-subtotal`
+
+    c = r.insertCell()
+    c.innerHTML = `<input id="${rowIndex}-delete" type=checkbox>`
+
+    updateSubtotal(rowIndex);
 }
 
 //}}}
 
+// Schema Puller{{{
+
+function getSchema() {
+    console.log("not implemented yet")
+}
+
+//}}}
 
 // Activities {{{
 function getActivities() {
@@ -618,5 +687,6 @@ function redirect() {
     window.location.replace(`https://veterancrane.quickbase.com/db/bsg43ze29/form?a=dr&rid=${invoice}&rl=dmv&page=1`);
 }
 //}}}
+
 </script></body>
 </html>
