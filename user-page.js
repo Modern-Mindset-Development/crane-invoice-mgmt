@@ -333,7 +333,7 @@ function getSchema() {
 function getActivities() {
     return queryQuickbase({
         "from": SCHEMA["Activities"]["id"],
-        "select": [3,6],
+        "select": [3,15],
         "where": "{16.EX.1}"
     }).then(resj => {handleActivities(resj["data"])})
 }
@@ -341,8 +341,8 @@ function handleActivities(resj) {
     for(var i=0; i<resj.length; i++) {
         var opt = document.createElement("option");
         opt.value = resj[i][3]["value"];
-        opt.innerHTML = resj[i][6]["value"];
-        activities[resj[i][3]["value"]] = resj[i][6]["value"]
+        opt.innerHTML = resj[i][15]["value"];
+        activities[resj[i][3]["value"]] = resj[i][15]["value"]
         $("#activities").append(opt);
     }
 }
