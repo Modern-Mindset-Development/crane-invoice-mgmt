@@ -7,6 +7,7 @@
         <link href='https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/ui-lightness/jquery-ui.css' rel='stylesheet'>
         <script src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js'></script>
 
+        <link href="https://fonts.cdnfonts.com/css/raleway-5" rel="stylesheet">
         <link rel='stylesheet' href='user-page.css'>
     </head>
     <body onload="startup()">
@@ -21,7 +22,7 @@
                 <div style="font-size: 150px">✅</div>
                 <div style="font-size: 30px; margin-bottom: 30px; color:white">Success!</div>
 
-                <div id="success-btn-div">
+                <div class="button-container">
                     <button class="action" style="height:40px" onclick=loadEditor()>Go Back</button>
                     <button class="action" style="height:40px" onclick=redirect()>Back to Invoice</button>
                 </div>
@@ -29,16 +30,19 @@
 
             <div id="invoice-select" class="page">
                 <h3>Choose an invoice</h3>
-                <input type="text" id="invoice-search" onkeyup="invoiceSearch('invoice-search', 'invoice-list')" placeholder="Search for invoices.."> 
-                <ul id="invoice-list">
+                <input type="text" id="invoice-search" class="search-input"
+                onkeyup="ulSearch('invoice-search', 'invoice-list')" placeholder="Search for invoices.."> 
+            <div style="height: 80%">
+                <ul id="invoice-list" class="search-list">
                 </ul>
+            </div>
             </div>
 
             <div id="grid-editor" class="page">
                 <h2>Veteran Crane Invoice Editor</h2>
                 <div style="display:flex; justify-content: center">
                     <div id="header" onclick=loadInvoiceSelect()><strong>Selected invoice:</strong> <span id="invoice-name"></span><br>(Click to Change)</div>
-                    <div id="refresh" onclick=getLines()>Refresh 🗘</div>
+                    <div id="refresh" onclick=getLines()>Revert Changes/Refresh 🗘</div>
                 </div>
                 <div id="table-div">
                 <table id="grid-edit-table">
@@ -52,10 +56,17 @@
 
             <div id="select-activity" class="popup">
                 <h2>Activity Selector</h2> 
-                <select id="activities"></select>
 
-                <button onclick="saveActivity()">Save</button>
-                <button onclick="cancelActivity()">Cancel</button>
+                <h3>Choose an activity</h3>
+                <input type="text" class="search-input" id="activity-search" 
+                        onkeyup="ulSearch('activity-search', 'activity-list')" placeholder="Search for activities.."> 
+                <div style="height: 60%">
+                    <ul id="activity-list" class="search-list">
+                    </ul>
+                </div>
+                <div class="button-container">
+                    <button class="action" style="height:40px" onclick=cancelActivity()>Cancel</button>
+                </div>
             </div>
         </div>
         <script src="user-page.js"></script>

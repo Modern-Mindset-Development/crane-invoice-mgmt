@@ -17,7 +17,6 @@ html, body {
     height: 95%;
 }
 body {
-    font-family: 'Raleway', 'Montserrat', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--main-bg-color);
     color: black;
     display: flex;
@@ -25,6 +24,8 @@ body {
     margin-left: 5%;
     margin-right: 5%;
 }
+
+body, input, textarea, button {font-family: "Raleway", arial, sans-serif}
 
 h2 {
     color: var(--accent2);
@@ -43,14 +44,13 @@ button {
     height: 40px;
     background-color: var(--accent3);
     color: var(--accent2);
-    font-weight: normal;
     border: 0px;
     border-radius: 5px;
     font-weight: bold;
     font-size: 20px;
     margin-top: 10px;
 }
-#success-btn-div {
+.button-container {
     display: flex;
     justify-content: center;
     gap: 10px;
@@ -105,23 +105,22 @@ input, textarea, select {
 /*}}}*/
 
 /* Search Menu {{{*/
-#invoice-search {
+.search-input {
     font-size: 16px; /* Increase font-size */
     padding: 12px 10px 12px 10px; /* Add some padding */
     border: 1px solid var(--main-bg-color); /* Add a grey border */
     width: 90%;
 }
-#invoice-list {
+.search-list {
     margin-top: 10px;
     padding: 20px;
     list-style-type: none;
     border-radius: 5px;
     text-align: left;
     overflow: auto;
-    scrollbar-width: none;
-    height: 80%;
+    height: 100%;
 }
-#invoice-list li {
+.search-list li {
     border: 1px solid var(--main-bg-color);
     margin-bottom: 20px;
     background-color: var(--accent3);
@@ -202,7 +201,7 @@ td {
     transform: translate(-50%, -50%);
     background-color: var(--side-bg-color);
     width: 50%;
-    height: 40%;
+    height: 70%;
 }
 
 /* Auxilliary Pages {{{*/

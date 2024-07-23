@@ -4,6 +4,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/ui-lightness/jquery-ui.css" rel="stylesheet"/>
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+<link href="https://fonts.cdnfonts.com/css/raleway-5" rel="stylesheet"/>
 
 <style>:root {
     --side-bg-color: #1d4193;
@@ -24,7 +25,6 @@ html, body {
     height: 95%;
 }
 body {
-    font-family: 'Raleway', 'Montserrat', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--main-bg-color);
     color: black;
     display: flex;
@@ -32,6 +32,8 @@ body {
     margin-left: 5%;
     margin-right: 5%;
 }
+
+body, input, textarea, button {font-family: "Raleway", arial, sans-serif}
 
 h2 {
     color: var(--accent2);
@@ -50,14 +52,13 @@ button {
     height: 40px;
     background-color: var(--accent3);
     color: var(--accent2);
-    font-weight: normal;
     border: 0px;
     border-radius: 5px;
     font-weight: bold;
     font-size: 20px;
     margin-top: 10px;
 }
-#success-btn-div {
+.button-container {
     display: flex;
     justify-content: center;
     gap: 10px;
@@ -112,23 +113,22 @@ input, textarea, select {
 /*}}}*/
 
 /* Search Menu {{{*/
-#invoice-search {
+.search-input {
     font-size: 16px; /* Increase font-size */
     padding: 12px 10px 12px 10px; /* Add some padding */
     border: 1px solid var(--main-bg-color); /* Add a grey border */
     width: 90%;
 }
-#invoice-list {
+.search-list {
     margin-top: 10px;
     padding: 20px;
     list-style-type: none;
     border-radius: 5px;
     text-align: left;
     overflow: auto;
-    scrollbar-width: none;
-    height: 80%;
+    height: 100%;
 }
-#invoice-list li {
+.search-list li {
     border: 1px solid var(--main-bg-color);
     margin-bottom: 20px;
     background-color: var(--accent3);
@@ -209,7 +209,7 @@ td {
     transform: translate(-50%, -50%);
     background-color: var(--side-bg-color);
     width: 50%;
-    height: 40%;
+    height: 70%;
 }
 
 /* Auxilliary Pages {{{*/
@@ -249,22 +249,24 @@ td {
 <div class="page" id="success">
 <div style="font-size: 150px">✅</div>
 <div style="font-size: 30px; margin-bottom: 30px; color:white">Success!</div>
-<div id="success-btn-div">
+<div class="button-container">
 <button class="action" onclick="loadEditor()" style="height:40px">Go Back</button>
 <button class="action" onclick="redirect()" style="height:40px">Back to Invoice</button>
 </div>
 </div>
 <div class="page" id="invoice-select">
 <h3>Choose an invoice</h3>
-<input id="invoice-search" onkeyup="invoiceSearch('invoice-search', 'invoice-list')" placeholder="Search for invoices.." type="text"/>
-<ul id="invoice-list">
+<input class="search-input" id="invoice-search" onkeyup="ulSearch('invoice-search', 'invoice-list')" placeholder="Search for invoices.." type="text"/>
+<div style="height: 80%">
+<ul class="search-list" id="invoice-list">
 </ul>
+</div>
 </div>
 <div class="page" id="grid-editor">
 <h2>Veteran Crane Invoice Editor</h2>
 <div style="display:flex; justify-content: center">
 <div id="header" onclick="loadInvoiceSelect()"><strong>Selected invoice:</strong> <span id="invoice-name"></span><br/>(Click to Change)</div>
-<div id="refresh" onclick="getLines()">Refresh 🗘</div>
+<div id="refresh" onclick="getLines()">Revert Changes/Refresh 🗘</div>
 </div>
 <div id="table-div">
 <table id="grid-edit-table">
@@ -277,9 +279,15 @@ td {
 </div>
 <div class="popup" id="select-activity">
 <h2>Activity Selector</h2>
-<select id="activities"></select>
-<button onclick="saveActivity()">Save</button>
-<button onclick="cancelActivity()">Cancel</button>
+<h3>Choose an activity</h3>
+<input class="search-input" id="activity-search" onkeyup="ulSearch('activity-search', 'activity-list')" placeholder="Search for activities.." type="text"/>
+<div style="height: 60%">
+<ul class="search-list" id="activity-list">
+</ul>
+</div>
+<div class="button-container">
+<button class="action" onclick="cancelActivity()" style="height:40px">Cancel</button>
+</div>
 </div>
 </div>
 
@@ -361,7 +369,7 @@ function loadInvoiceSelect() {
     getInvoices()
         .then(res => showPage("invoice-select"))
 }
-function invoiceSearch(input_tag, list_tag) {
+function ulSearch(input_tag, list_tag) {
     // Declare variables
     var input, filter, ul, li, a, i, txtValue;
     input = $(`#${input_tag}`);
@@ -413,7 +421,12 @@ function getInvoiceInfo() {
     }).then(resj => {handleInvoiceInfo(resj["data"])});
 }
 function handleInvoiceInfo(res) {
-    $("#invoice-name").text(res[0][20]["value"]);
+    if(res.length > 0) {
+        $("#invoice-name").text(res[0][20]["value"]);
+    } else {
+        invoice = null
+        startup()
+    }
 }
 
 // }}}
@@ -485,7 +498,7 @@ function handleLines(resj) {
 // Editing the Grid{{{
 
 function addChangeEntry(record_id) {
-    index = changes.findIndex(change => change[3]["value"] == record_id)
+    index = changes.findIndex(change => change[3] == {"value": record_id})
     if(index == -1) {
         index = changes.length
         changes.push({3: {"value": record_id}})
@@ -513,6 +526,7 @@ function updateCell(cell, newVal=null) {
 }
 
 function addChange(rowIndex, colIndex) {
+    // rowIndex and colIndex refer to the position in the data array
     index = addChangeEntry(data[rowIndex][0])
 
     let field = fields[colIndex]
@@ -554,32 +568,30 @@ function saveData() {
     for(let i = 0; i<changes.length; i++) {
         if(changes[i][3]["value"] < 0) {
             delete changes[i][3]
-
-            // Change the related invoice
-            changes[i][15] = {}
-            changes[i][15]["value"] = invoice;
         }
     }
     addRecords(SCHEMA["Lines"]["id"], changes)
-    changes = []
 }
 
 function newLine(values=default_vals) {
-    newRowIndex = data.length
+    dataRow = data.length
 
     data.push(structuredClone(values))
-    data[newRowIndex][0] = nextid
+    data[dataRow][0] = nextid
+    changeIndex = addChangeEntry(nextid)
     
     for(let j = 1; j < field_names.length; j++) {
-        addChange(newRowIndex, j)
+        changes[changeIndex][fields[j]] = {"value": data[dataRow][j]}
     }
 
-    genRow(newRowIndex)
+    changes[index][15] = {"value": invoice}
+
+    genRow(dataRow)
     nextid -= 1;
 }
 
 function genRow(rowIndex) {
-    // Visually generate the new row and update values
+    // Visually generate a new row and update values based on rowIndex of data array
     table = document.getElementById("grid-edit-table")
     r = table.insertRow(rowIndex + 1)
 
@@ -589,8 +601,7 @@ function genRow(rowIndex) {
         c.setAttribute("contenteditable", "")
         c.textContent = data[rowIndex][j]
         if(fields[j] == 6) {
-            x = c
-            c.onclick = function() {openActivity(x)}
+            c.onclick = function() {openActivity(this)}
             c.textContent = activities[data[rowIndex][j]]
             c.removeAttribute("contenteditable","")
         }
@@ -619,31 +630,39 @@ function getActivities() {
     return queryQuickbase({
         "from": SCHEMA["Activities"]["id"],
         "select": [3,15],
-        "where": "{16.EX.1}"
+        "where": "{16.EX.1}AND{13.XEX.'Category'}"
     }).then(resj => {handleActivities(resj["data"])})
 }
-function handleActivities(resj) {
-    for(var i=0; i<resj.length; i++) {
-        var opt = document.createElement("option");
-        opt.value = resj[i][3]["value"];
-        opt.innerHTML = resj[i][15]["value"];
-        activities[resj[i][3]["value"]] = resj[i][15]["value"]
-        $("#activities").append(opt);
+function handleActivities(res) {
+    let activitiesUl = $("#activity-list");
+
+    activitiesUl.empty();
+    for(let i = 0; i < res.length; i++) {
+        let activityLi = $("<li></li>");
+        activityLi.val(res[i][3]["value"]);
+        activityLi.text(res[i][15]["value"]);
+
+        activityLi.click(() => {
+            activity = res[i][3]["value"];
+            saveActivity(activity)
+        });
+
+        activitiesUl.append(activityLi)
+        activities[res[i][3]["value"]] = activityLi.text()
     }
 }
 
 let modifying;
 function openActivity(c) {
     $(".popup").show() 
-    $("#activities").val(data[c.id.split("-")[0]][c.id.split("-")[1]])
     modifying=c
 }
-function saveActivity() {
-    modifying.innerHTML = activities[$("#activities").val()]
-    updateCell(modifying, $("#activities").val())
+function saveActivity(activity) {
+    modifying.innerHTML = activities[activity]
+    console.log(activity)
+    updateCell(modifying, activity)
 
     record_id = data[modifying.id.split("-")[0]][0]
-    addChangeEntry(record_id)
     addChange(modifying.id.split("-")[0], modifying.id.split("-")[1])
     $(".popup").hide()
 }

@@ -76,7 +76,7 @@ function loadInvoiceSelect() {
     getInvoices()
         .then(res => showPage("invoice-select"))
 }
-function invoiceSearch(input_tag, list_tag) {
+function ulSearch(input_tag, list_tag) {
     // Declare variables
     var input, filter, ul, li, a, i, txtValue;
     input = $(`#${input_tag}`);
@@ -128,7 +128,12 @@ function getInvoiceInfo() {
     }).then(resj => {handleInvoiceInfo(resj["data"])});
 }
 function handleInvoiceInfo(res) {
-    $("#invoice-name").text(res[0][20]["value"]);
+    if(res.length > 0) {
+        $("#invoice-name").text(res[0][20]["value"]);
+    } else {
+        invoice = null
+        startup()
+    }
 }
 
 // }}}
@@ -200,7 +205,7 @@ function handleLines(resj) {
 // Editing the Grid{{{
 
 function addChangeEntry(record_id) {
-    index = changes.findIndex(change => change[3]["value"] == record_id)
+    index = changes.findIndex(change => change[3] == {"value": record_id})
     if(index == -1) {
         index = changes.length
         changes.push({3: {"value": record_id}})
@@ -228,6 +233,7 @@ function updateCell(cell, newVal=null) {
 }
 
 function addChange(rowIndex, colIndex) {
+    // rowIndex and colIndex refer to the position in the data array
     index = addChangeEntry(data[rowIndex][0])
 
     let field = fields[colIndex]
@@ -269,32 +275,30 @@ function saveData() {
     for(let i = 0; i<changes.length; i++) {
         if(changes[i][3]["value"] < 0) {
             delete changes[i][3]
-
-            // Change the related invoice
-            changes[i][15] = {}
-            changes[i][15]["value"] = invoice;
         }
     }
     addRecords(SCHEMA["Lines"]["id"], changes)
-    changes = []
 }
 
 function newLine(values=default_vals) {
-    newRowIndex = data.length
+    dataRow = data.length
 
     data.push(structuredClone(values))
-    data[newRowIndex][0] = nextid
+    data[dataRow][0] = nextid
+    changeIndex = addChangeEntry(nextid)
     
     for(let j = 1; j < field_names.length; j++) {
-        addChange(newRowIndex, j)
+        changes[changeIndex][fields[j]] = {"value": data[dataRow][j]}
     }
 
-    genRow(newRowIndex)
+    changes[index][15] = {"value": invoice}
+
+    genRow(dataRow)
     nextid -= 1;
 }
 
 function genRow(rowIndex) {
-    // Visually generate the new row and update values
+    // Visually generate a new row and update values based on rowIndex of data array
     table = document.getElementById("grid-edit-table")
     r = table.insertRow(rowIndex + 1)
 
@@ -304,8 +308,7 @@ function genRow(rowIndex) {
         c.setAttribute("contenteditable", "")
         c.textContent = data[rowIndex][j]
         if(fields[j] == 6) {
-            x = c
-            c.onclick = function() {openActivity(x)}
+            c.onclick = function() {openActivity(this)}
             c.textContent = activities[data[rowIndex][j]]
             c.removeAttribute("contenteditable","")
         }
@@ -334,31 +337,39 @@ function getActivities() {
     return queryQuickbase({
         "from": SCHEMA["Activities"]["id"],
         "select": [3,15],
-        "where": "{16.EX.1}"
+        "where": "{16.EX.1}AND{13.XEX.'Category'}"
     }).then(resj => {handleActivities(resj["data"])})
 }
-function handleActivities(resj) {
-    for(var i=0; i<resj.length; i++) {
-        var opt = document.createElement("option");
-        opt.value = resj[i][3]["value"];
-        opt.innerHTML = resj[i][15]["value"];
-        activities[resj[i][3]["value"]] = resj[i][15]["value"]
-        $("#activities").append(opt);
+function handleActivities(res) {
+    let activitiesUl = $("#activity-list");
+
+    activitiesUl.empty();
+    for(let i = 0; i < res.length; i++) {
+        let activityLi = $("<li></li>");
+        activityLi.val(res[i][3]["value"]);
+        activityLi.text(res[i][15]["value"]);
+
+        activityLi.click(() => {
+            activity = res[i][3]["value"];
+            saveActivity(activity)
+        });
+
+        activitiesUl.append(activityLi)
+        activities[res[i][3]["value"]] = activityLi.text()
     }
 }
 
 let modifying;
 function openActivity(c) {
     $(".popup").show() 
-    $("#activities").val(data[c.id.split("-")[0]][c.id.split("-")[1]])
     modifying=c
 }
-function saveActivity() {
-    modifying.innerHTML = activities[$("#activities").val()]
-    updateCell(modifying, $("#activities").val())
+function saveActivity(activity) {
+    modifying.innerHTML = activities[activity]
+    console.log(activity)
+    updateCell(modifying, activity)
 
     record_id = data[modifying.id.split("-")[0]][0]
-    addChangeEntry(record_id)
     addChange(modifying.id.split("-")[0], modifying.id.split("-")[1])
     $(".popup").hide()
 }
