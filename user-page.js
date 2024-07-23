@@ -20,16 +20,6 @@ const SCHEMA = {
         'id': 'bsgtcuxt6'
     }
 }
-const LINEFIELDS = {
-    "#line-date": 11,
-    "#line-activity": 6,
-    "#line-description": 19,
-    "#line-group": 6,
-    "#line-price": 18,
-    "#line-vendor-price": 31,
-    "#line-qty": 12,
-    "#line-target-margin": 32,
-}
 // }}}
 // Global Variables {{{
 let invoice = URLPARAMS.get('invoice');
@@ -140,7 +130,7 @@ function handleInvoiceInfo(res) {
 
 // Grid Editor {{{
 const fields = [3,11,6,19,26,18,31,12,32]
-const default_vals = [-1,"","","","",0,"",0,0.3]
+const default_vals = [-1,"","","","","","","",""]
 let field_names = [];
 
 function loadEditor() {
@@ -200,7 +190,7 @@ function handleLines(resj) {
     updateGrand()
 
 
-    document.getElementById("grid-edit-table").addEventListener('input', event => updateCell(event.target));
+    document.getElementById("grid-edit-table").addEventListener('input', event => updateData(event.target));
 }
 // Editing the Grid{{{
 
@@ -213,19 +203,20 @@ function addChangeEntry(record_id) {
     return index
 }
 
-function updateCell(cell, newVal=null) {
+function updateData(cell, newVal, newText=null) {
     const rowIndex = cell.id.split("-")[0]; // Adjust for header row
-    const record_id = data[rowIndex][0]
-
     const colIndex = cell.id.split("-")[1];
-    if(newVal == null) {
-        newVal = cell.textContent
-    }
+    const record_id = data[rowIndex][0]
 
     if(colIndex == "delete") {
         index = addChangeEntry(record_id)
         changes[index][15] = {"value": cell.checked ? "" : invoice}
     } else {
+        if(!newText) {
+            newText = newVal
+        }
+        cell.textContent = newText
+
         data[rowIndex][colIndex] = newVal
         addChange(rowIndex, colIndex)
         updateSummary(rowIndex, colIndex)
@@ -309,7 +300,9 @@ function genRow(rowIndex) {
         c.textContent = data[rowIndex][j]
         if(fields[j] == 6) {
             c.onclick = function() {openActivity(this)}
-            c.textContent = activities[data[rowIndex][j]]
+            if(data[rowIndex][j]) {
+                c.textContent = activities[data[rowIndex][j]][15]["value"]
+            }
             c.removeAttribute("contenteditable","")
         }
     }
@@ -336,8 +329,8 @@ function getSchema() {
 function getActivities() {
     return queryQuickbase({
         "from": SCHEMA["Activities"]["id"],
-        "select": [3,15],
-        "where": "{16.EX.1}AND{13.XEX.'Category'}"
+        "select": [3,7,10,13,15],
+        "where": "{16.EX.1}"
     }).then(resj => {handleActivities(resj["data"])})
 }
 function handleActivities(res) {
@@ -345,6 +338,10 @@ function handleActivities(res) {
 
     activitiesUl.empty();
     for(let i = 0; i < res.length; i++) {
+        activities[res[i][3]["value"]] = res[i]
+        if(res[i][13]["value"] === "Category") {
+            continue
+        }
         let activityLi = $("<li></li>");
         activityLi.val(res[i][3]["value"]);
         activityLi.text(res[i][15]["value"]);
@@ -355,7 +352,6 @@ function handleActivities(res) {
         });
 
         activitiesUl.append(activityLi)
-        activities[res[i][3]["value"]] = activityLi.text()
     }
 }
 
@@ -364,13 +360,14 @@ function openActivity(c) {
     $(".popup").show() 
     modifying=c
 }
-function saveActivity(activity) {
-    modifying.innerHTML = activities[activity]
-    console.log(activity)
-    updateCell(modifying, activity)
+function saveActivity(activityId) {
+    dataRow = modifying.id.split("-")[0]
+    description_elt =document.getElementById(`${dataRow}-3`)
+    price_elt = document.getElementById(`${dataRow}-5`)
 
-    record_id = data[modifying.id.split("-")[0]][0]
-    addChange(modifying.id.split("-")[0], modifying.id.split("-")[1])
+    updateData(modifying, activityId, activities[activityId][15]["value"])
+    updateData(description_elt, activities[activity][10]["value"])
+    updateData(price_elt, activities[activity][7]["value"])
     $(".popup").hide()
 }
 function cancelActivity() {
