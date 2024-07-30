@@ -213,7 +213,7 @@ function handleLines(resj) {
 // Editing the Grid{{{
 
 function addChangeEntry(record_id) {
-    index = changes.findIndex(change => change[3] == {"value": record_id})
+    index = changes.findIndex(change => change[3]["value"] == record_id)
     if(index == -1) {
         index = changes.length
         changes.push({3: {"value": record_id}})
@@ -275,10 +275,17 @@ function saveData() {
     for(let i = 0; i<changes.length; i++) {
         if(changes[i][3]["value"] < 0) {
             delete changes[i][3]
+            if(changes[i][15]["value"] != invoice) {
+                delete changes[i]
+            }
         }
     }
-    addRecords(SCHEMA["Lines"]["id"], changes)
-    changes = []
+    if(changes.length == 0) {
+        alert("No changes to save")
+    } else {
+        addRecords(SCHEMA["Lines"]["id"], changes)
+        changes = []
+    }
 }
 
 function newLine(values=qbDefault) {
