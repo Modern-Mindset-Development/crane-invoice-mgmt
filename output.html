@@ -424,7 +424,7 @@ function handleInvoiceInfo(res) {
 
 // Grid Editor {{{
 const qbFields = [3,11,6,19,26,18,31,12,32,21]
-const qbDefault = [-1,"","","","","","","",""]
+const qbDefault = {3: -1}
 
 // -1 represents the subtotal field
 // -2 represents the delete field
@@ -553,7 +553,6 @@ function noNull(x) {
 
 function updateSubtotal(rowIndex) { 
     subtotals[rowIndex] = noNull(data[rowIndex][18] * data[rowIndex][12])
-    console.log(subtotals)
     document.getElementById(`${rowIndex}_-1`).textContent = subtotals[rowIndex]
 }
 
@@ -582,8 +581,10 @@ function newLine(values=qbDefault) {
     data[dataRow][0] = nextid
     changeIndex = addChangeEntry(nextid)
     
-    for(let j = 1; j < field_names.length; j++) {
-        changes[changeIndex][qbFields[j]] = {"value": data[dataRow][j]}
+    for(let j = 0; j < qbFields.length; j++) {
+        if(data[dataRow][qbFields[j]]) {
+            changes[changeIndex][qbFields[j]] = {"value": data[dataRow][qbFields[j]]}
+        }
     }
 
     changes[index][15] = {"value": invoice}
