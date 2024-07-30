@@ -1,749 +1,756 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta content="width=device-width, initial-scale=1" name="viewport"/>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/ui-lightness/jquery-ui.css" rel="stylesheet"/>
-    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-    <link href="https://fonts.cdnfonts.com/css/raleway-5" rel="stylesheet"/>
-    <style>
-        :root {
-            --side-bg-color: #1d4193;
-            --main-bg-color: #00003f;
-            --accent1: #3399ff;
-            --accent2: white;
-            --accent3: rgb(200, 50, 70);
-            --loader-fg: #3498db;
-            --loader-bg: #f3f3f3;
-        }
+<head><meta content="width=device-width, initial-scale=1" name="viewport"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/ui-lightness/jquery-ui.css" rel="stylesheet"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+<link href="https://fonts.cdnfonts.com/css/raleway-5" rel="stylesheet"/>
 
-        [contenteditable] {
-            -webkit-user-select: text;
-            user-select: text;
-        }
+<style>:root {
+    --side-bg-color: #1d4193;
+    --main-bg-color: #00003f;
+    --accent1: #3399ff;
+    --accent2: white;
+    --accent3: rgb(200, 50, 70);
+    --loader-fg: #3498db;
+    --loader-bg: #f3f3f3;
+}
 
-        /* Generic Styling */
-        * {
-            box-sizing: border-box;
-        }
 
-        html, body {
-            height: 95%;
-        }
+/* Generic Styling{{{*/
+*{
+    box-sizing: border-box;
+}
+html, body {
+    height: 95%;
+}
+body {
+    background-color: var(--main-bg-color);
+    color: black;
+    display: flex;
+    justify-content: center;
+    margin-left: 5%;
+    margin-right: 5%;
+}
 
-        body {
-            background-color: var(--main-bg-color);
-            color: black;
-            display: flex;
-            justify-content: center;
-            margin-left: 5%;
-            margin-right: 5%;
-        }
+body, input, textarea, button {font-family: "Raleway", arial, sans-serif}
 
-        body, input, textarea, button {
-            font-family: "Raleway", arial, sans-serif;
-        }
+h2 {
+    color: var(--accent2);
+    text-align: center;
+    margin-top: 0px;
+}
+h3 {
+    color: var(--accent2);
+    margin-bottom: 20px; 
+}
 
-        h2 {
-            color: var(--accent2);
-            text-align: center;
-            margin-top: 0px;
-        }
 
-        h3 {
-            color: var(--accent2);
-            margin-bottom: 20px;
-        }
+button {
+    cursor: pointer;
+    width: 100%;
+    height: 40px;
+    background-color: var(--accent3);
+    color: var(--accent2);
+    border: 0px;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 20px;
+    margin-top: 10px;
+}
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
 
-        button {
-            cursor: pointer;
-            width: 100%;
-            height: 40px;
-            background-color: var(--accent3);
-            color: var(--accent2);
-            border: 0px;
-            border-radius: 5px;
-            font-weight: bold;
-            font-size: 20px;
-            margin-top: 10px;
-        }
+label {
+    display: block;
+}
+input, textarea, select {
+    width: 100%;
+    font-size: 20px;
+    border-radius: 10px;
+    margin-top: 5px;
+}/*}}}*/
 
-        .button-container {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
+/* Page Outline{{{*/
+#page-content {
+    margin: 1em;
+    font-size: 20px;
+    width: 100%;
+    text-align: center;
+    height: 100%;
+}
+.page {
+    display: none;
+    text-align: center;
+    height: 100%;
+}
 
-        label {
-            display: block;
-        }
+#header {
+    width: 50%;
+    border-radius: 10px;
+    padding: 10px;
+    cursor: pointer;
+    background-color: var(--accent3);
+    border: 2px solid black;
+    text-align: center;
+    position: relative;
+    top: 0px;
+}
+#refresh {
+    display: flex;
+    cursor: pointer;
+    width: 50%;
+    border-radius: 10px;
+    background-color: var(--accent3);
+    border: 2px solid black;
+    padding: 10px;
+    justify-content: center;
+    align-items: center;
+}
+/*}}}*/
 
-        input, textarea, select {
-            width: 100%;
-            font-size: 20px;
-            border-radius: 10px;
-            margin-top: 5px;
-        }
+/* Search Menu {{{*/
+.search-input {
+    font-size: 16px; /* Increase font-size */
+    padding: 12px 10px 12px 10px; /* Add some padding */
+    border: 1px solid var(--main-bg-color); /* Add a grey border */
+    width: 90%;
+}
+.search-list {
+    margin-top: 10px;
+    padding: 20px;
+    list-style-type: none;
+    border-radius: 5px;
+    text-align: left;
+    overflow: auto;
+    height: 100%;
+}
+.search-list li {
+    border: 1px solid var(--main-bg-color);
+    margin-bottom: 20px;
+    background-color: var(--accent3);
+    padding: 12px;
+    font-size: 18px;
+    color: var(--accent2);
+    display: block;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+}/*}}}*/
 
-        #page-content {
-            margin: 1em;
-            font-size: 20px;
-            width: 100%;
-            text-align: center;
-            height: 100%;
-        }
+/* Grid Edit{{{*/
+#actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
 
-        .page {
-            display: none;
-            text-align: center;
-            height: 100%;
-        }
+#grid-editor {
+    padding: 2%;
+    background-color: var(--main-bg-color);
+    margin-bottom: 20px;
+    border-radius: 10px;
+    text-align: left;
+}
 
-        #header {
-            width: 50%;
-            border-radius: 10px;
-            padding: 10px;
-            cursor: pointer;
-            background-color: var(--accent3);
-            border: 2px solid black;
-            text-align: center;
-            position: relative;
-            top: 0px;
-        }
+#table-div {
+    width: 100%; /* Set the width of the table container */
+    overflow-x: auto; /* Enable horizontal scrolling */
+    overflow-y: scroll;
+    height: 75%;
+}
 
-        #refresh {
-            display: flex;
-            cursor: pointer;
-            width: 50%;
-            border-radius: 10px;
-            background-color: var(--accent3);
-            border: 2px solid black;
-            padding: 10px;
-            justify-content: center;
-            align-items: center;
-        }
+table {
+    width: 100%;
+    border-collapse: separate;
+}
 
-        .search-input {
-            font-size: 16px;
-            padding: 12px 10px 12px 10px;
-            border: 1px solid var(--main-bg-color);
-            width: 90%;
-        }
+tr {
+    background-color: var(--accent2);
+    margin: 10px;
+    padding: 10px;
+    text-align: center;
+    max-height: 10px;
+}
+th {
+    position: sticky;
+    top: 0;
+    color: black;
+    background-color: var(--accent3);
+    margin: 10px;
+    padding: 10px;
+    text-align: center;
+    border: 0.5px solid black;
+}
+td {
+    color: black;
+    padding: 5px;
+    font-size: 20px;
+    height: 10px;
+    overflow: hidden;
+}
 
-        .search-list {
-            margin-top: 10px;
-            padding: 20px;
-            list-style-type: none;
-            border-radius: 5px;
-            text-align: left;
-            overflow: auto;
-            height: 100%;
-        }
+#summary-row {
+    position: sticky;
+    bottom: 0;
+    background-color: var(--accent3);
+}
+/*}}}*/
 
-        .search-list li {
-            border: 1px solid var(--main-bg-color);
-            margin-bottom: 20px;
-            background-color: var(--accent3);
-            padding: 12px;
-            font-size: 18px;
-            color: var(--accent2);
-            display: block;
-            border-radius: 5px;
-            cursor: pointer;
-            text-align: center;
-        }
+.popup {
+    display: none;
+    padding: 30px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--side-bg-color);
+    width: 50%;
+    height: 70%;
+}
 
-        #actions {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
+/* Auxilliary Pages {{{*/
+#success {
+    text-align: center;
+    padding: 20px;
+}
 
-        #grid-editor {
-            padding: 2%;
-            background-color: var(--main-bg-color);
-            margin-bottom: 20px;
-            border-radius: 10px;
-            text-align: left;
-        }
+#loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 100px;
+}
+#loader {
+    border: 16px solid var(--loader-bg);
+    border-top: 16px solid var(--loader-fg);
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+}
 
-        #table-div {
-            width: 100%;
-            overflow-x: auto;
-            overflow-y: scroll;
-            height: 75%;
-        }
 
-        table {
-            width: 100%;
-            border-collapse: separate;
-        }
 
-        tr {
-            background-color: var(--accent2);
-            margin: 10px;
-            padding: 10px;
-            text-align: center;
-            max-height: 10px;
-        }
-
-        th {
-            position: sticky;
-            top: 0;
-            color: black;
-            background-color: var(--accent3);
-            margin: 10px;
-            padding: 10px;
-            text-align: center;
-            border: 0.5px solid black;
-        }
-
-        td {
-            color: black;
-            padding: 5px;
-            font-size: 20px;
-            height: 10px;
-            overflow: hidden;
-        }
-
-        #summary-row {
-            position: sticky;
-            bottom: 0;
-            background-color: var(--accent3);
-        }
-
-        .popup {
-            display: none;
-            padding: 30px;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: var(--side-bg-color);
-            width: 50%;
-            height: 70%;
-        }
-
-        #success {
-            text-align: center;
-            padding: 20px;
-        }
-
-        #loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 100px;
-        }
-
-        #loader {
-            border: 16px solid var(--loader-bg);
-            border-top: 16px solid var(--loader-fg);
-            border-radius: 50%;
-            width: 120px;
-            height: 120px;
-            animation: spin 2s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-</head>
-<body onload="startup()">
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}/*}}}*/
+</style></head><body onload="startup()">
 <div id="page-content">
-    <div class="page" id="loading">
-        <div style="display: flex; justify-content: center">
-            <div id="loader"></div>
-        </div>
-    </div>
-    <div class="page" id="success">
-        <div style="font-size: 150px">✅</div>
-        <div style="font-size: 30px; margin-bottom: 30px; color:white">Success!</div>
-        <div class="button-container">
-            <button class="action" onclick="loadEditor()" style="height:40px">Go Back</button>
-            <button class="action" onclick="redirect()" style="height:40px">Back to Invoice</button>
-        </div>
-    </div>
-    <div class="page" id="invoice-select">
-        <h3>Choose an invoice</h3>
-        <input class="search-input" id="invoice-search" onkeyup="ulSearch('invoice-search', 'invoice-list')" placeholder="Search for invoices.." type="text"/>
-        <div style="height: 80%">
-            <ul class="search-list" id="invoice-list"></ul>
-        </div>
-    </div>
-    <div class="page" id="grid-editor">
-        <h2>Veteran Crane Invoice Editor</h2>
-        <div style="display:flex; justify-content: center">
-            <div id="header" onclick="loadInvoiceSelect()"><strong>Selected invoice:</strong> <span id="invoice-name"></span><br/>(Click to Change)</div>
-            <div id="refresh" onclick="getLines()">Revert Changes/Refresh 🗘</div>
-        </div>
-        <div id="table-div">
-            <table id="grid-edit-table"></table>
-        </div>
-        <div id="actions">
-            <button class="action" onclick="newLine()">+</button>
-            <button class="action" onclick="saveData()">Save</button>
-        </div>
-    </div>
-    <div class="popup" id="select-activity">
-        <h2>Activity Selector</h2>
-        <h3>Choose an activity</h3>
-        <input class="search-input" id="activity-search" onkeyup="ulSearch('activity-search', 'activity-list')" placeholder="Search for activities.." type="text"/>
-        <div style="height: 60%">
-            <ul class="search-list" id="activity-list"></ul>
-        </div>
-        <div class="button-container">
-            <button class="action" onclick="cancelActivity()" style="height:40px">Cancel</button>
-        </div>
-    </div>
+<div class="page" id="loading">
+<div style="display: flex; justify-content: center">
+<div id="loader"></div>
+</div>
+</div>
+<div class="page" id="success">
+<div style="font-size: 150px">✅</div>
+<div style="font-size: 30px; margin-bottom: 30px; color:white">Success!</div>
+<div class="button-container">
+<button class="action" onclick="loadEditor()" style="height:40px">Go Back</button>
+<button class="action" onclick="redirect()" style="height:40px">Back to Invoice</button>
+</div>
+</div>
+<div class="page" id="invoice-select">
+<h3>Choose an invoice</h3>
+<input class="search-input" id="invoice-search" onkeyup="ulSearch('invoice-search', 'invoice-list')" placeholder="Search for invoices.." type="text"/>
+<div style="height: 80%">
+<ul class="search-list" id="invoice-list">
+</ul>
+</div>
+</div>
+<div class="page" id="grid-editor">
+<h2>Veteran Crane Invoice Editor</h2>
+<div style="display:flex; justify-content: center">
+<div id="header" onclick="loadInvoiceSelect()"><strong>Selected invoice:</strong> <span id="invoice-name"></span><br/>(Click to Change)</div>
+<div id="refresh" onclick="getLines()">Revert Changes/Refresh 🗘</div>
+</div>
+<div id="table-div">
+<table id="grid-edit-table">
+</table>
+</div>
+<div id="actions">
+<button class="action" onclick="newLine()">+</button>
+<button class="action" onclick="saveData()">Save</button>
+</div>
+</div>
+<div class="popup" id="select-activity">
+<h2>Activity Selector</h2>
+<h3>Choose an activity</h3>
+<input class="search-input" id="activity-search" onkeyup="ulSearch('activity-search', 'activity-list')" placeholder="Search for activities.." type="text"/>
+<div style="height: 60%">
+<ul class="search-list" id="activity-list">
+</ul>
+</div>
+<div class="button-container">
+<button class="action" onclick="cancelActivity()" style="height:40px">Cancel</button>
+</div>
+</div>
 </div>
 
-<script>
-    // Constants
-    const HEADERS = {
-        'QB-Realm-Hostname': 'veterancrane',
-        'User-Agent': 'Veteran Crane Invoice Editor',
-        'Content-Type': 'application/json'
+<script>// Constants {{{
+const HEADERS = {
+    'QB-Realm-Hostname': 'veterancrane',
+    'User-Agent': 'Veteran Crane Invoice Editor',
+    'Content-Type': 'application/json'
+}
+const URLPARAMS = new URLSearchParams(window.location.search);
+const OVERRIDE = ""
+const SCHEMA = {
+    'Invoices': {
+        'id': 'bsg43ze29'
+    },
+    'Activities': {
+        'id': 'bsgtctjng'
+    },
+    'Employees': {
+        'id': 'bsext97t8'
+    },
+    'Lines': {
+        'id': 'bsgtcuxt6'
     }
-    const URLPARAMS = new URLSearchParams(window.location.search);
-    const OVERRIDE = ""
-    const SCHEMA = {
-        'Invoices': {
-            'id': 'bsg43ze29'
-        },
-        'Activities': {
-            'id': 'bsgtctjng'
-        },
-        'Employees': {
-            'id': 'bsext97t8'
-        },
-        'Lines': {
-            'id': 'bsgtcuxt6'
-        }
-    }
+}
+// }}}
+// Global Variables {{{
+let invoice = URLPARAMS.get('invoice');
+let changes = [];
+let nextid = -1;
+let subtotals;
+let activities= {}
+let data = {};
+// }}}
 
-    // Global Variables
-    let invoice = URLPARAMS.get('invoice');
-    let changes = [];
-    let nextid = -1;
-    let subtotals;
-    let activities = {}
-    let data;
 
-    // Initialization
-    function startup() {
+// Initialization {{{
+function startup() {
+    showPage("loading");
+    getActivities()
+        .then(res => {if(invoice) {getInvoiceInfo();loadEditor()} else {loadInvoiceSelect()}})
+}
+// }}}
+
+// Show/hide functionality {{{
+function showClassElt(className, id) {
+    $("."+className).each(function () {
+        $(this).hide();
+        if($(this).attr("id") == id) {$(this).show()}
+    });
+}
+
+function showEditExpense(id) {
+    showPage("edit-expense")
+    $("#expense-form")[0].reset()
+    if(id) {
         showPage("loading");
-        getActivities()
-            .then(res => {
-                if (invoice) {
-                    getInvoiceInfo();
-                    loadEditor()
-                } else {
-                    loadInvoiceSelect()
-                }
-            })
+        getExpense(id).then(res => showPage("edit-expense"));
+        expenseId = id;
     }
+}
 
-    // Show/hide functionality
-    function showClassElt(className, id) {
-        $("." + className).each(function () {
-            $(this).hide();
-            if ($(this).attr("id") === id) {
-                $(this).show()
-            }
-        });
-    }
+function showPage(newPage) {showClassElt("page", newPage)}
+// }}}
 
-    function showEditExpense(id) {
-        showPage("edit-expense")
-        $("#expense-form")[0].reset()
-        if (id) {
-            showPage("loading");
-            getExpense(id).then(res => showPage("edit-expense"));
-            expenseId = id;
-        }
-    }
+// Invoice Selection {{{
+function loadInvoiceSelect() {
+    showPage("loading");
+    getInvoices()
+        .then(res => showPage("invoice-select"))
+}
+function ulSearch(input_tag, list_tag) {
+    // Declare variables
+    var input, filter, ul, li, a, i, txtValue;
+    input = $(`#${input_tag}`);
+    filter = input.val().toUpperCase();
+    ul = $(`#${list_tag}`);
+    li = ul.children('li');
 
-    function showPage(newPage) {
-        showClassElt("page", newPage)
-    }
-
-    // Invoice Selection
-    function loadInvoiceSelect() {
-        showPage("loading");
-        getInvoices()
-            .then(res => showPage("invoice-select"))
-    }
-
-    function ulSearch(input_tag, list_tag) {
-        var input, filter, ul, li, txtValue;
-        input = $(`#${input_tag}`);
-        filter = input.val().toUpperCase();
-        ul = $(`#${list_tag}`);
-        li = ul.children('li');
-
-        for (let i = 0; i < li.length; i++) {
-            txtValue = li[i].textContent || li[i].innerText;
-            if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                li[i].style.display = "";
-            } else {
-                li[i].style.display = "none";
-            }
-        }
-    }
-
-    function getInvoices() {
-        return queryQuickbase({
-            "from": SCHEMA["Invoices"]["id"],
-            "select": [3, 20]
-        }).then(resj => handleInvoices(resj["data"]));
-    }
-
-    function handleInvoices(res) {
-        let invoicesLst = $("#invoice-list");
-
-        invoicesLst.empty();
-        for (let i = 0; i < res.length; i++) {
-            let invoiceOpt = $("<li></li>");
-            invoiceOpt.val(res[i][3]["value"]);
-            invoiceOpt.text(res[i][20]["value"]);
-
-            invoiceOpt.click(() => {
-                invoice = res[i][3]["value"];
-                showPage("loading")
-                loadEditor();
-            });
-
-            invoicesLst.append(invoiceOpt)
-        }
-    }
-
-    function getInvoiceInfo() {
-        return queryQuickbase({
-            "from": SCHEMA["Invoices"]["id"],
-            "select": [20],
-            "where": `{3.EX.${invoice}}`,
-        }).then(resj => {
-            handleInvoiceInfo(resj["data"])
-        });
-    }
-
-    function handleInvoiceInfo(res) {
-        if (res.length > 0) {
-            $("#invoice-name").text(res[0][20]["value"]);
+    // Loop through all list items, and hide those who don't match the search query
+    for (i = 0; i < li.length; i++) {
+        txtValue = li[i].textContent || li[i].innerText;
+        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+            li[i].style.display = "";
         } else {
-            invoice = null
-            startup()
+            li[i].style.display = "none";
         }
     }
+}
 
-    // Grid Editor
-    const fields = [3, 11, 6, 19, 26, 18, 31, 12, 32]
-    const default_vals = [-1, "", "", "", "", "", "", "", ""]
-    let field_names = [];
+function getInvoices() {
+    return queryQuickbase({
+        "from": SCHEMA["Invoices"]["id"],
+        "select": [3,20]
+    }).then(resj => handleInvoices(resj["data"]));
+}
+function handleInvoices(res) {
+    let invoicesLst = $("#invoice-list");
 
-    function loadEditor() {
-        showPage("loading")
-        getLines().then(res => showPage("grid-editor"))
+    invoicesLst.empty();
+    for(let i = 0; i < res.length; i++) {
+        let invoiceOpt = $("<li></li>");
+        invoiceOpt.val(res[i][3]["value"]);
+        invoiceOpt.text(res[i][20]["value"]);
+
+        invoiceOpt.click(() => {
+            invoice = res[i][3]["value"];
+            showPage("loading")
+            getInvoiceInfo()
+                .then(_ => loadEditor());
+        });
+
+        invoicesLst.append(invoiceOpt)
+    }
+}
+
+function getInvoiceInfo() {
+    return queryQuickbase({
+        "from": SCHEMA["Invoices"]["id"],
+        "select": [20],
+        "where": `{3.EX.${invoice}}`,
+    }).then(resj => {handleInvoiceInfo(resj["data"])});
+}
+function handleInvoiceInfo(res) {
+    if(res.length > 0) {
+        $("#invoice-name").text(res[0][20]["value"]);
+    } else {
+        invoice = null
+        startup()
+    }
+}
+
+// }}}
+
+// Grid Editor {{{
+const qbFields = [3,11,6,19,26,18,31,12,32,21]
+const qbDefault = [-1,"","","","","","","",""]
+
+// -1 represents the subtotal field
+// -2 represents the delete field
+function Field(id, name) {
+    this.id = id;
+    this.name = name;
+}
+const displayFields = [
+    new Field(26, "Line Number/Group"),
+    new Field(11, "Date"),
+    new Field(6, "Activity"),
+    new Field(19, "Edit Description"),
+    new Field(21, "Description"),
+    new Field(18, "Price"),
+    new Field(31, "Vendor Price"),
+    new Field(12, "QTY"),
+    new Field(-1, "Subtotal"),
+    new Field(32, "Target Margin"),
+    new Field(-2, "Delete")
+]
+
+function loadEditor() {
+    showPage("loading")
+    getLines().then(res => showPage("grid-editor"))
+}
+
+function getLines() {
+    return queryQuickbase({
+        "from": SCHEMA["Lines"]["id"],
+        "select": qbFields,
+        "where": `{15.EX.${invoice}}`
+    }).then(resj => {handleLines(resj)})
+}
+
+function lineNumberSorter(recordA, recordB) {
+    return recordA[26] > recordB[26]
+}
+
+function handleLines(resj) {
+    let table = document.getElementById("grid-edit-table")
+    table.innerHTML = ""
+
+    data = resj["data"].map(record => {
+        for(const field of Object.keys(record)) {
+            record[field] = record[field]["value"]
+        }
+        return record
+    })
+    data.sort(lineNumberSorter)
+
+    header_row = table.insertRow()
+    for(let j = 0; j<displayFields.length; j++) {
+        let new_header = document.createElement("th")
+        new_header.textContent = displayFields[j].name
+        header_row.append(new_header)
     }
 
-    function getLines() {
-        return queryQuickbase({
-            "from": SCHEMA["Lines"]["id"],
-            "select": fields,
-            "where": `{15.EX.${invoice}}`
-        }).then(resj => {
-            handleLines(resj)
-        })
+    subtotals = new Array(data.length)
+    for (let i = 0; i < data.length; i++) {
+        genRow(i)
     }
 
-    function handleLines(resj) {
-        let table = document.getElementById("grid-edit-table")
-        table.innerHTML = ""
-
-        data = resj["data"].map(record => {
-            return fields.map(field => record[field]["value"])
-        })
-
-        field_names = resj['fields'].map(field => field["label"])
-        let list = [];
-
-        let header_row = table.insertRow()
-        for (let j = 1; j < field_names.length; j++) {
-            let new_header = document.createElement("th")
-            new_header.textContent = field_names[j]
-            header_row.append(new_header)
-        }
-
-        let st_header = document.createElement("th")
-        st_header.textContent = "Subtotal"
-        header_row.append(st_header)
-
-        let del_header = document.createElement("th")
-        del_header.textContent = "Delete"
-        header_row.append(del_header)
-
-        subtotals = new Array(data.length)
-        for (let i = 0; i < data.length; i++) {
-            genRow(i)
-        }
-
-        let summary_row = table.insertRow()
-        summary_row.id = "summary-row";
-        for (let j = 1; j < field_names.length; j++) {
-            let new_sum = summary_row.insertCell()
-            new_sum.textContent = "-"
-            new_sum.id = `summary-${j}`
-        }
-
-        new_sum = summary_row.insertCell()
+    summary_row = table.insertRow()
+    summary_row.id = "summary-row";
+    for(let j = 1; j<displayFields.length; j++) {
+        let new_sum = summary_row.insertCell()
         new_sum.textContent = "-"
-        new_sum.id = "grand-total"
+        new_sum.id = `summary_${j}`
+    }
 
-        updateGrand()
+    new_sum = summary_row.insertCell()
+    new_sum.textContent = "-"
+    new_sum.id = "grand-total"
 
-        document.getElementById("grid-edit-table").addEventListener('input', function(event) {
-            if (event.target.hasAttribute("contenteditable")) {
-                updateData(event.target, event.target.textContent);
-            }
+    updateGrand()
+
+    document.getElementById("grid-edit-table").addEventListener('input', event => updateData(event.target));
+}
+// Editing the Grid{{{
+
+function addChangeEntry(record_id) {
+    index = changes.findIndex(change => change[3] == {"value": record_id})
+    if(index == -1) {
+        index = changes.length
+        changes.push({3: {"value": record_id}})
+    }
+    return index
+}
+
+function updateData(cell, newVal=null, newText=null) {
+    const rowIndex = cell.id.split("_")[0]; // Adjust for header row
+    const displayField = cell.id.split("_")[1];
+    const record_id = data[rowIndex][3]
+
+    index = addChangeEntry(record_id)
+    if(displayField == "delete") {
+        changes[index][15] = {"value": cell.checked ? "" : invoice}
+    } else {
+        if(!newVal) {
+            newVal = cell.textContent
+        }
+        if(!newText) {
+            newText = newVal
+        }
+        cell.textContent = newText
+
+        data[rowIndex][displayField] = newVal
+        changes[index][displayField] = {"value": data[rowIndex][displayField]}
+        updateSummary(rowIndex)
+    }
+}
+//}}}
+
+// Update summary stats {{{
+function updateSummary(rowIndex) {
+    updateSubtotal(rowIndex);
+    updateGrand();
+}
+
+function noNull(x) {
+    if(isNaN(x)) {
+        return 0
+    }
+    return x
+}
+
+function updateSubtotal(rowIndex) { 
+    subtotals[rowIndex] = noNull(data[rowIndex][18] * data[rowIndex][12])
+    console.log(subtotals)
+    document.getElementById(`${rowIndex}_-1`).textContent = subtotals[rowIndex]
+}
+
+function updateGrand() { 
+    grandTotal = subtotals.reduce((acc,elt) => acc + elt, 0)
+    document.getElementById(`grand-total`).textContent = grandTotal
+}
+//}}}
+
+
+
+function saveData() {
+    for(let i = 0; i<changes.length; i++) {
+        if(changes[i][3]["value"] < 0) {
+            delete changes[i][3]
+        }
+    }
+    addRecords(SCHEMA["Lines"]["id"], changes)
+    changes = []
+}
+
+function newLine(values=qbDefault) {
+    dataRow = data.length
+
+    data.push(structuredClone(values))
+    data[dataRow][0] = nextid
+    changeIndex = addChangeEntry(nextid)
+    
+    for(let j = 1; j < field_names.length; j++) {
+        changes[changeIndex][qbFields[j]] = {"value": data[dataRow][j]}
+    }
+
+    changes[index][15] = {"value": invoice}
+
+    genRow(dataRow)
+    nextid -= 1;
+}
+
+function genRow(rowIndex) {
+    // Visually generate a new row and update values based on rowIndex of data array
+    table = document.getElementById("grid-edit-table")
+    r = table.insertRow(rowIndex + 1)
+
+    for(let j = 0; j<displayFields.length; j++) {
+        field = displayFields[j].id
+        value = data[rowIndex][field]
+
+        c = r.insertCell()
+        c.id = `${rowIndex}_${field}`
+        if(qbFields.includes(field)) {
+            c.setAttribute("contenteditable", "")
+            c.textContent = value
+        }
+
+        if(field == 6) {
+            c.onclick = function() {openActivity(this)}
+            c.textContent = value ? activities[value][15]["value"] : ""
+            c.removeAttribute("contenteditable","")
+        }
+        if(field == -2) {
+            c.innerHTML = `<input id="${rowIndex}_delete" type=checkbox>`
+            c.removeAttribute("contenteditable","")
+        }
+    }
+
+
+    updateSubtotal(rowIndex);
+}
+
+//}}}
+
+// Schema Puller{{{
+
+function getSchema() {
+    console.log("not implemented yet")
+}
+
+//}}}
+
+// Activities {{{
+function getActivities() {
+    return queryQuickbase({
+        "from": SCHEMA["Activities"]["id"],
+        "select": [3,7,10,13,15],
+        "where": "{16.EX.1}"
+    }).then(resj => {handleActivities(resj["data"])})
+}
+function handleActivities(res) {
+    let activitiesUl = $("#activity-list");
+
+    activitiesUl.empty();
+    for(let i = 0; i < res.length; i++) {
+        activities[res[i][3]["value"]] = res[i]
+        if(res[i][13]["value"] === "Category") {
+            continue
+        }
+        let activityLi = $("<li></li>");
+        activityLi.val(res[i][3]["value"]);
+        activityLi.text(res[i][15]["value"]);
+
+        activityLi.click(() => {
+            activity = res[i][3]["value"];
+            saveActivity(activity)
         });
-    }
 
-    function addChangeEntry(record_id) {
-        let index = changes.findIndex(change => change[3]["value"] == record_id)
-        if (index == -1) {
-            index = changes.length
-            changes.push({3: {"value": record_id}})
+        activitiesUl.append(activityLi)
+    }
+}
+
+let modifying;
+function openActivity(c) {
+    $(".popup").show() 
+    modifying=c
+}
+function saveActivity(activityId) {
+    dataRow = modifying.id.split("_")[0]
+    description_elt =document.getElementById(`${dataRow}_19`)
+    price_elt = document.getElementById(`${dataRow}_18`)
+
+    updateData(modifying, activityId, activities[activityId][15]["value"])
+    updateData(description_elt, activities[activity][10]["value"])
+    updateData(price_elt, activities[activity][7]["value"])
+    $(".popup").hide()
+}
+function cancelActivity() {
+    $(".popup").hide()
+}
+
+// }}}
+
+// Quickbase Interface {{{
+
+function addRecords(table, record_data) {
+    showPage("loading");
+    return authenticatedInstance(table, (key) => {
+        let headers = HEADERS;
+        headers["Authorization"] = key;
+
+        let body = {
+            "to": table,
+            "data": record_data
         }
-        return index
+        return fetch("https://api.quickbase.com/v1/records", {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(body)
+        }).then(res => showPage("success"));
+    });
+}
+
+function queryQuickbase(body) {
+    // General query function for quickbase
+    return authenticatedInstance(body["from"], (key) => {
+        let headers = HEADERS;
+        headers["Authorization"] = key;
+
+        return fetch("https://api.quickbase.com/v1/records/query", {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(body)
+        }).then(res => res.json());
+    })
+}
+
+function authenticatedInstance(table_id, fun) {
+    // Wraps the given function with a temporary authentication key
+    if(OVERRIDE) {
+        return fun(OVERRIDE);
     }
-
-    function updateData(cell, newVal) {
-        const rowIndex = cell.id.split("-")[0];
-        const colIndex = cell.id.split("-")[1];
-        const record_id = data[rowIndex][0];
-
-        data[rowIndex][colIndex] = newVal;
-
-        if (colIndex == "delete") {
-            let index = addChangeEntry(record_id);
-            changes[index][15] = {"value": cell.checked ? "" : invoice};
-        } else {
-            cell.textContent = newVal;
-            addChange(rowIndex, colIndex);
-            updateSummary(rowIndex, colIndex);
-        }
-    }
-
-    function addChange(rowIndex, colIndex) {
-        let index = addChangeEntry(data[rowIndex][0])
-        let field = fields[colIndex]
-        changes[index][field] = {"value": data[rowIndex][colIndex]}
-    }
-
-    function updateSummary(rowIndex, colIndex) {
-        updateSubtotal(rowIndex);
-        updateGrand();
-    }
-
-    function noNull(x) {
-        if (isNaN(x)) {
-            return 0
-        }
-        return x
-    }
-
-    function updateSubtotal(rowIndex) {
-        subtotals[rowIndex] = noNull(data[rowIndex][5] * data[rowIndex][7])
-        document.getElementById(`${rowIndex}-subtotal`).textContent = subtotals[rowIndex]
-    }
-
-    function updateGrand() {
-        let grandTotal = subtotals.reduce((acc, elt) => acc + elt, 0)
-        document.getElementById(`grand-total`).textContent = grandTotal
-    }
-
-    function saveData() {
-        for (let i = 0; i < changes.length; i++) {
-            if (changes[i][3]["value"] < 0) {
-                delete changes[i][3]
-            }
-        }
-        addRecords(SCHEMA["Lines"]["id"], changes)
-    }
-
-    function newLine(values = default_vals) {
-        let dataRow = data.length
-        data.push(structuredClone(values))
-        data[dataRow][0] = nextid
-        let changeIndex = addChangeEntry(nextid)
-
-        for (let j = 1; j < field_names.length; j++) {
-            changes[changeIndex][fields[j]] = {"value": data[dataRow][j]}
-        }
-
-        changes[changeIndex][15] = {"value": invoice}
-
-        genRow(dataRow)
-        nextid -= 1;
-    }
-
-    function genRow(rowIndex) {
-        let table = document.getElementById("grid-edit-table");
-        let r = table.insertRow(rowIndex + 1);
-
-        for (let j = 1; j < field_names.length; j++) {
-            let c = r.insertCell();
-            c.id = `${rowIndex}-${j}`;
-
-            if (fields[j] !== 6) {
-                c.setAttribute("contenteditable", "true");
-                c.addEventListener("input", function () {
-                    updateData(c, c.textContent);
-                });
-            } else {
-                c.addEventListener("click", function () {
-                    openActivity(c);
-                });
-            }
-
-            c.textContent = data[rowIndex][j];
-
-            if (fields[j] === 6 && data[rowIndex][j]) {
-                c.textContent = activities[data[rowIndex][j]][15]["value"];
-            }
-        }
-
-        // Subtotal cell
-        let subtotalCell = r.insertCell();
-        subtotalCell.id = `${rowIndex}-subtotal`;
-        subtotalCell.textContent = subtotals[rowIndex] || 0;
-
-        // Delete cell
-        let deleteCell = r.insertCell();
-        deleteCell.innerHTML = `<input id="${rowIndex}-delete" type="checkbox" onclick="updateData(this, this.checked)">`;
-
-        updateSubtotal(rowIndex);
-    }
-
-    // Activities
-    function getActivities() {
-        return queryQuickbase({
-            "from": SCHEMA["Activities"]["id"],
-            "select": [3, 7, 10, 13, 15],
-            "where": "{16.EX.1}AND{13.XEX.'Category'}"
-        }).then(resj => {
-            handleActivities(resj["data"])
+    return fetch('https://api.quickbase.com/v1/auth/temporary/'+table_id,
+        {
+            method: 'GET',
+            headers: HEADERS,
+            credentials: 'include'
         })
-    }
+        .then(res => res.json())
+        .then(resj => fun("QB-TEMP-TOKEN " + resj["temporaryAuthorization"]));
+}
+// }}}
 
-    function handleActivities(res) {
-        let activitiesUl = $("#activity-list");
+// Other helpers {{{
+function toIsoString(date) {
+    let pad = function(num) {
+        return (num < 10 ? '0' : '') + num;
+    };
+    return date.getFullYear() +
+        '-' + pad(date.getMonth() + 1) +
+        '-' + pad(date.getDate()) +
+        'T' + pad(date.getHours()) +
+        ':' + pad(date.getMinutes()) +
+        ':' + pad(date.getSeconds());
+}
 
-        activitiesUl.empty();
-        for (let i = 0; i < res.length; i++) {
-            activities[res[i][3]["value"]] = res[i]
-            if (res[i][13]["value"] === "Category") {
-                continue
-            }
-            let activityLi = $("<li></li>");
-            activityLi.val(res[i][3]["value"]);
-            activityLi.text(res[i][15]["value"]);
+function redirect() {
+    window.location.replace(`https://veterancrane.quickbase.com/db/bsg43ze29/form?a=dr&rid=${invoice}&rl=dmv&page=1`);
+}
+//}}}
 
-            activityLi.click(() => {
-                activity = res[i][3]["value"];
-                saveActivity(activity)
-            });
-
-            activitiesUl.append(activityLi)
-        }
-    }
-
-    let modifying;
-    function openActivity(c) {
-        $(".popup").show()
-        modifying = c
-    }
-
-    function saveActivity(activityId) {
-        let dataRow = modifying.id.split("-")[0]
-        let description_elt = document.getElementById(`${dataRow}-3`)
-        let price_elt = document.getElementById(`${dataRow}-5`)
-
-        updateData(modifying, activityId, activities[activityId][15]["value"])
-        updateData(description_elt, activities[activity][10]["value"])
-        updateData(price_elt, activities[activity][7]["value"])
-        $(".popup").hide()
-    }
-
-    function cancelActivity() {
-        $(".popup").hide()
-    }
-
-    // Quickbase Interface
-    function addRecords(table, record_data) {
-        showPage("loading");
-        return authenticatedInstance(table, (key) => {
-            let headers = HEADERS;
-            headers["Authorization"] = key;
-
-            let body = {
-                "to": table,
-                "data": record_data
-            }
-            return fetch("https://api.quickbase.com/v1/records", {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify(body)
-            }).then(res => showPage("success"));
-        });
-    }
-
-    function queryQuickbase(body) {
-        return authenticatedInstance(body["from"], (key) => {
-            let headers = HEADERS;
-            headers["Authorization"] = key;
-
-            return fetch("https://api.quickbase.com/v1/records/query", {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify(body)
-            }).then(res => res.json());
-        })
-    }
-
-    function authenticatedInstance(table_id, fun) {
-        if (OVERRIDE) {
-            return fun(OVERRIDE);
-        }
-        return fetch('https://api.quickbase.com/v1/auth/temporary/' + table_id,
-            {
-                method: 'GET',
-                headers: HEADERS,
-                credentials: 'include'
-            })
-            .then(res => res.json())
-            .then(resj => fun("QB-TEMP-TOKEN " + resj["temporaryAuthorization"]));
-    }
-
-    // Other helpers
-    function toIsoString(date) {
-        let pad = function (num) {
-            return (num < 10 ? '0' : '') + num;
-        };
-        return date.getFullYear() +
-            '-' + pad(date.getMonth() + 1) +
-            '-' + pad(date.getDate()) +
-            'T' + pad(date.getHours()) +
-            ':' + pad(date.getMinutes()) +
-            ':' + pad(date.getSeconds());
-    }
-
-    function redirect() {
-        window.location.replace(`https://veterancrane.quickbase.com/db/bsg43ze29/form?a=dr&rid=${invoice}&rl=dmv&page=1`);
-    }
-</script>
-</body>
+</script></body>
 </html>

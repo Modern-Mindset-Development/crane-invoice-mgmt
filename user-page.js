@@ -27,7 +27,7 @@ let changes = [];
 let nextid = -1;
 let subtotals;
 let activities= {}
-let data;
+let data = {};
 // }}}
 
 
@@ -103,7 +103,8 @@ function handleInvoices(res) {
         invoiceOpt.click(() => {
             invoice = res[i][3]["value"];
             showPage("loading")
-            loadEditor();
+            getInvoiceInfo()
+                .then(_ => loadEditor());
         });
 
         invoicesLst.append(invoiceOpt)
@@ -129,9 +130,28 @@ function handleInvoiceInfo(res) {
 // }}}
 
 // Grid Editor {{{
-const fields = [3,11,6,19,26,18,31,12,32]
-const default_vals = [-1,"","","","","","","",""]
-let field_names = [];
+const qbFields = [3,11,6,19,26,18,31,12,32,21]
+const qbDefault = [-1,"","","","","","","",""]
+
+// -1 represents the subtotal field
+// -2 represents the delete field
+function Field(id, name) {
+    this.id = id;
+    this.name = name;
+}
+const displayFields = [
+    new Field(26, "Line Number/Group"),
+    new Field(11, "Date"),
+    new Field(6, "Activity"),
+    new Field(19, "Edit Description"),
+    new Field(21, "Description"),
+    new Field(18, "Price"),
+    new Field(31, "Vendor Price"),
+    new Field(12, "QTY"),
+    new Field(-1, "Subtotal"),
+    new Field(32, "Target Margin"),
+    new Field(-2, "Delete")
+]
 
 function loadEditor() {
     showPage("loading")
@@ -141,34 +161,33 @@ function loadEditor() {
 function getLines() {
     return queryQuickbase({
         "from": SCHEMA["Lines"]["id"],
-        "select": fields,
+        "select": qbFields,
         "where": `{15.EX.${invoice}}`
     }).then(resj => {handleLines(resj)})
+}
+
+function lineNumberSorter(recordA, recordB) {
+    return recordA[26] > recordB[26]
 }
 
 function handleLines(resj) {
     let table = document.getElementById("grid-edit-table")
     table.innerHTML = ""
 
-    data = resj["data"].map(record => {return fields.map(field => record[field]["value"])})
-
-    field_names = resj['fields'].map(field => field["label"])
-    let list = [];
+    data = resj["data"].map(record => {
+        for(const field of Object.keys(record)) {
+            record[field] = record[field]["value"]
+        }
+        return record
+    })
+    data.sort(lineNumberSorter)
 
     header_row = table.insertRow()
-    for(let j = 1; j<field_names.length; j++) {
+    for(let j = 0; j<displayFields.length; j++) {
         let new_header = document.createElement("th")
-        new_header.textContent = field_names[j]
+        new_header.textContent = displayFields[j].name
         header_row.append(new_header)
     }
-
-    st_header = document.createElement("th")
-    st_header.textContent = "Subtotal"
-    header_row.append(st_header)
-
-    del_header = document.createElement("th")
-    del_header.textContent = "Delete"
-    header_row.append(del_header)
 
     subtotals = new Array(data.length)
     for (let i = 0; i < data.length; i++) {
@@ -177,10 +196,10 @@ function handleLines(resj) {
 
     summary_row = table.insertRow()
     summary_row.id = "summary-row";
-    for(let j = 1; j<field_names.length; j++) {
+    for(let j = 1; j<displayFields.length; j++) {
         let new_sum = summary_row.insertCell()
         new_sum.textContent = "-"
-        new_sum.id = `summary-${j}`
+        new_sum.id = `summary_${j}`
     }
 
     new_sum = summary_row.insertCell()
@@ -188,7 +207,6 @@ function handleLines(resj) {
     new_sum.id = "grand-total"
 
     updateGrand()
-
 
     document.getElementById("grid-edit-table").addEventListener('input', event => updateData(event.target));
 }
@@ -203,40 +221,32 @@ function addChangeEntry(record_id) {
     return index
 }
 
-function updateData(cell, newVal, newText=null) {
-    const rowIndex = cell.id.split("-")[0]; // Adjust for header row
-    const colIndex = cell.id.split("-")[1];
-    const record_id = data[rowIndex][0]
+function updateData(cell, newVal=null, newText=null) {
+    const rowIndex = cell.id.split("_")[0]; // Adjust for header row
+    const displayField = cell.id.split("_")[1];
+    const record_id = data[rowIndex][3]
 
-    if(colIndex == "delete") {
-        index = addChangeEntry(record_id)
+    index = addChangeEntry(record_id)
+    if(displayField == "delete") {
         changes[index][15] = {"value": cell.checked ? "" : invoice}
     } else {
+        if(!newVal) {
+            newVal = cell.textContent
+        }
         if(!newText) {
             newText = newVal
         }
         cell.textContent = newText
 
-        data[rowIndex][colIndex] = newVal
-        addChange(rowIndex, colIndex)
-        updateSummary(rowIndex, colIndex)
+        data[rowIndex][displayField] = newVal
+        changes[index][displayField] = {"value": data[rowIndex][displayField]}
+        updateSummary(rowIndex)
     }
 }
-
-function addChange(rowIndex, colIndex) {
-    // rowIndex and colIndex refer to the position in the data array
-    index = addChangeEntry(data[rowIndex][0])
-
-    let field = fields[colIndex]
-    changes[index][field] = {"value": data[rowIndex][colIndex]}
-}//}}}
+//}}}
 
 // Update summary stats {{{
-function updateSummary(rowIndex, colIndex) {
-    // if(field_names[colIndex]=="Edit Price") {
-    //     sum = data.reduce((acc, elt) => acc + elt[colIndex], 0)
-    //     document.getElementById(`summary-${colIndex}`).textContent = sum
-    // }
+function updateSummary(rowIndex) {
     updateSubtotal(rowIndex);
     updateGrand();
 }
@@ -249,9 +259,9 @@ function noNull(x) {
 }
 
 function updateSubtotal(rowIndex) { 
-    subtotals[rowIndex] = noNull(data[rowIndex][5] * data[rowIndex][7])
-
-    document.getElementById(`${rowIndex}-subtotal`).textContent = subtotals[rowIndex]
+    subtotals[rowIndex] = noNull(data[rowIndex][18] * data[rowIndex][12])
+    console.log(subtotals)
+    document.getElementById(`${rowIndex}_-1`).textContent = subtotals[rowIndex]
 }
 
 function updateGrand() { 
@@ -269,9 +279,10 @@ function saveData() {
         }
     }
     addRecords(SCHEMA["Lines"]["id"], changes)
+    changes = []
 }
 
-function newLine(values=default_vals) {
+function newLine(values=qbDefault) {
     dataRow = data.length
 
     data.push(structuredClone(values))
@@ -279,7 +290,7 @@ function newLine(values=default_vals) {
     changeIndex = addChangeEntry(nextid)
     
     for(let j = 1; j < field_names.length; j++) {
-        changes[changeIndex][fields[j]] = {"value": data[dataRow][j]}
+        changes[changeIndex][qbFields[j]] = {"value": data[dataRow][j]}
     }
 
     changes[index][15] = {"value": invoice}
@@ -293,24 +304,28 @@ function genRow(rowIndex) {
     table = document.getElementById("grid-edit-table")
     r = table.insertRow(rowIndex + 1)
 
-    for(let j = 1; j<field_names.length; j++) {
+    for(let j = 0; j<displayFields.length; j++) {
+        field = displayFields[j].id
+        value = data[rowIndex][field]
+
         c = r.insertCell()
-        c.id = `${rowIndex}-${j}`
-        c.setAttribute("contenteditable", "")
-        c.textContent = data[rowIndex][j]
-        if(fields[j] == 6) {
+        c.id = `${rowIndex}_${field}`
+        if(qbFields.includes(field)) {
+            c.setAttribute("contenteditable", "")
+            c.textContent = value
+        }
+
+        if(field == 6) {
             c.onclick = function() {openActivity(this)}
-            if(data[rowIndex][j]) {
-                c.textContent = activities[data[rowIndex][j]][15]["value"]
-            }
+            c.textContent = value ? activities[value][15]["value"] : ""
+            c.removeAttribute("contenteditable","")
+        }
+        if(field == -2) {
+            c.innerHTML = `<input id="${rowIndex}_delete" type=checkbox>`
             c.removeAttribute("contenteditable","")
         }
     }
-    c = r.insertCell()
-    c.id = `${rowIndex}-subtotal`
 
-    c = r.insertCell()
-    c.innerHTML = `<input id="${rowIndex}-delete" type=checkbox>`
 
     updateSubtotal(rowIndex);
 }
@@ -361,9 +376,9 @@ function openActivity(c) {
     modifying=c
 }
 function saveActivity(activityId) {
-    dataRow = modifying.id.split("-")[0]
-    description_elt =document.getElementById(`${dataRow}-3`)
-    price_elt = document.getElementById(`${dataRow}-5`)
+    dataRow = modifying.id.split("_")[0]
+    description_elt =document.getElementById(`${dataRow}_19`)
+    price_elt = document.getElementById(`${dataRow}_18`)
 
     updateData(modifying, activityId, activities[activityId][15]["value"])
     updateData(description_elt, activities[activity][10]["value"])
