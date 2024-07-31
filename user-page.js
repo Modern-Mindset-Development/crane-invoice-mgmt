@@ -167,7 +167,7 @@ function getLines() {
 }
 
 function lineNumberSorter(recordA, recordB) {
-    return recordA[26] > recordB[26]
+    return recordA[26] < recordB[26]
 }
 
 function handleLines(resj) {
