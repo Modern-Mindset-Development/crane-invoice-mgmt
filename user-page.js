@@ -333,7 +333,6 @@ function genRow(rowIndex) {
             c.removeAttribute("contenteditable","")
         }
     if(field == 21) {
-        c.innerHTML = `<input id="${rowIndex}_delete" type=checkbox>`
         c.removeAttribute("contenteditable","")
     }
     }
