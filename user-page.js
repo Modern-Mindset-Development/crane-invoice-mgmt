@@ -229,6 +229,8 @@ function updateData(cell, newVal=null, newText=null) {
     index = addChangeEntry(record_id)
     if(displayField == "delete") {
         changes[index][15] = {"value": cell.checked ? "" : invoice}
+    } else if(displayField == "date") {
+        changes[index][11] = {"value": cell.value}
     } else {
         if(!newVal) {
             newVal = cell.textContent
@@ -272,7 +274,7 @@ function updateGrand() {
 
 
 function saveData() {
-    for(let i = 0; i<changes.length; i++) {
+    for(let i = 0; i < changes.length; i++) {
         if(changes[i][3]["value"] < 0) {
             delete changes[i][3]
             if(changes[i][15]["value"] != invoice) {
@@ -292,7 +294,7 @@ function newLine(values=qbDefault) {
     dataRow = data.length
 
     data.push(structuredClone(values))
-    data[dataRow][0] = nextid
+    data[dataRow][3] = nextid
     changeIndex = addChangeEntry(nextid)
     
     for(let j = 0; j < qbFields.length; j++) {
@@ -329,14 +331,18 @@ function genRow(rowIndex) {
             c.removeAttribute("contenteditable","")
         }
         if(field == -2) {
-            c.innerHTML = `<input id="${rowIndex}_delete" type=checkbox>`
+            c.innerHTML = `<input id="${rowIndex}_delete" class="delete-input" type=checkbox>`
             c.removeAttribute("contenteditable","")
         }
-    if(field == 21) {
-        c.removeAttribute("contenteditable","")
+        if(field == 11) {
+            c.className = "date-field"
+            c.innerHTML = `<input id="${rowIndex}_date" class="date-input" type=date>`
+            c.removeAttribute("contenteditable","")
+        }
+        if(field == 21) {
+            c.removeAttribute("contenteditable","")
+        }
     }
-    }
-
 
     updateSubtotal(rowIndex);
 }
