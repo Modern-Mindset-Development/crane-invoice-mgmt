@@ -643,7 +643,7 @@ function genRow(rowIndex) {
         }
         if(field == 11) {
             c.className = "date-field"
-            c.innerHTML = `<input id="${rowIndex}_date" class="date-input" type=date>`
+            c.innerHTML = `<input id="${rowIndex}_date" class="date-input" value="${value}" type=date>`
             c.removeAttribute("contenteditable","")
         }
         if(field == 21) {
